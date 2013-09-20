@@ -26,6 +26,7 @@ public class ExternalMergeSort<T> {
     private final SortHandler<T> handler;
     private final File tmpdir;
     
+    private int bufferSize = 8192;
     private int chunkSize = 1000;
     private int chunkBytes = 100000000; // 100 Mb
     
@@ -81,7 +82,7 @@ public class ExternalMergeSort<T> {
 
         @Override
         public Chunk<T> readChunk(InputStream input, int chunkSize, int chunkBytes) {
-            Chunk<T> result = new Chunk<T>(chunkSize);
+            Chunk<T> result = new Chunk<T>(chunkSize/4);
             try {
                 while (input.read() != -1) {
                     T value = mapper.readValue(input, type);
@@ -121,7 +122,7 @@ public class ExternalMergeSort<T> {
 
     private File writeChunk(List<T> chunk) throws IOException {
         File chunkFile = File.createTempFile("exmeso-", "", tmpdir);
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(chunkFile));
+        OutputStream out = new BufferedOutputStream(new FileOutputStream(chunkFile), bufferSize);
         try {
             try {
                 sortAndWriteChunk(chunk, out);
@@ -155,12 +156,13 @@ public class ExternalMergeSort<T> {
     }
     
     private Chunk<T> readChunk(Iterator<T> input) {
-        Chunk<T> result = new Chunk<T>(250);
+        final int chunkSize = 1000;
+        Chunk<T> result = new Chunk<T>(chunkSize/4);
         int c = 0;
         while (input.hasNext()) {
             c++;
             result.add(input.next());
-            if (c > 1000) {
+            if (c >= chunkSize) {
                 return result;
             }
         }
@@ -192,7 +194,7 @@ public class ExternalMergeSort<T> {
                 return o1.getValue().compareTo(o2.getValue());
             }
         };
-        JacksonSort<StringPojo> writer = new JacksonSort<StringPojo>(comparator);
+        JacksonSort<StringPojo> writer = new JacksonSort<StringPojo>(comparator, StringPojo.class);
         ExternalMergeSort<StringPojo> sort = new ExternalMergeSort<StringPojo>(writer, new File("/tmp"));
 
         // load chunk array from iterator
