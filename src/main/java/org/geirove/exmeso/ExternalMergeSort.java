@@ -15,7 +15,10 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class ExternalMergeSort<T> {
@@ -38,7 +41,7 @@ public class ExternalMergeSort<T> {
     public static interface SortHandler<T> extends Closeable {
         void sortChunk(List<T> values);
         void writeChunk(List<T> values, OutputStream out) throws IOException;
-        List<T> readChunk(InputStream input, int chunkSizeHint, int chunkBytesHint);
+        Chunk<T> readChunk(InputStream input, int chunkSizeHint, int chunkBytesHint);
     }
 
     public static class JacksonSort<T> implements SortHandler<T> {
@@ -47,19 +50,24 @@ public class ExternalMergeSort<T> {
         
         private final ObjectMapper mapper;
         private final Comparator<T> comparator;
+        private final Class<T> type;
 
-        public JacksonSort(Comparator<T> comparator) {
-            this(DEFAULT_MAPPER, comparator);
+        public JacksonSort(Comparator<T> comparator, Class<T> type) {
+            this(DEFAULT_MAPPER, comparator, type);
         }
         
-        public JacksonSort(ObjectMapper mapper, Comparator<T> comparator) {
+        public JacksonSort(ObjectMapper mapper, Comparator<T> comparator, Class<T> type) {
             this.mapper = mapper;
             this.comparator = comparator;
+            this.type = type;
+            this.mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         }
 
         @Override
         public void writeChunk(List<T> values, OutputStream out) throws IOException{
-            mapper.writeValue(out, values);
+            for (T value : values) {
+                mapper.writeValue(out, value);
+            }
         }
 
         @Override
@@ -72,17 +80,31 @@ public class ExternalMergeSort<T> {
         }
 
         @Override
-        public List<T> readChunk(InputStream input, int chunkSize, int chunkBytes) {
-            return null;
+        public Chunk<T> readChunk(InputStream input, int chunkSize, int chunkBytes) {
+            Chunk<T> result = new Chunk<T>(chunkSize);
+            try {
+                while (input.read() != -1) {
+                    T value = mapper.readValue(input, type);
+                    result.add(value);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return result;
         }
 
     }
 
     private List<File> sortChunks(InputStream input) throws IOException {
         List<File> result = new ArrayList<File>();
-        List<T> chunk = readChunk(input);
-        File chunkFile = writeChunk(chunk);
-        result.add(chunkFile);
+        while (true) {
+            Chunk<T> chunk = readChunk(input);
+            if (chunk == null) {
+                break;
+            }
+            File chunkFile = writeChunk(chunk);
+            result.add(chunkFile);
+        }
         return result;
     }
     
@@ -117,20 +139,34 @@ public class ExternalMergeSort<T> {
         handler.writeChunk(values, out);
     }
 
-    private List<T> readChunk(Iterator<T> input) {
-        List<T> result = new ArrayList<T>();
+    public static class Chunk<T> extends ArrayList<T> {
+        private boolean isLast;
+        public Chunk(int chunkSize) {
+            super(chunkSize);
+        }
+        public boolean isLast() {
+            return isLast;
+        }
+        public void setLast(boolean isLast) {
+            this.isLast = isLast;
+        }
+    }
+    
+    private Chunk<T> readChunk(Iterator<T> input) {
+        Chunk<T> result = new Chunk<T>();
         int c = 0;
         while (input.hasNext()) {
             c++;
             result.add(input.next());
             if (c > 1000) {
-                break;
+                return result;
             }
         }
+        result.setLast(true);
         return result;
     }
 
-    private List<T> readChunk(InputStream input) {
+    private Chunk<T> readChunk(InputStream input) {
         // read chunk; specify size in bytes or documents; configured in handler
         return handler.readChunk(input, chunkSize, chunkBytes);
     }
