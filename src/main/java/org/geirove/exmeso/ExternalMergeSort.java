@@ -121,7 +121,7 @@ public class ExternalMergeSort<T> {
 
     private File writeChunk(List<T> chunk) throws IOException {
         File chunkFile = File.createTempFile("exmeso-", "", tmpdir);
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File("/tmp/sort.temp")));
+        OutputStream out = new BufferedOutputStream(new FileOutputStream(chunkFile));
         try {
             try {
                 sortAndWriteChunk(chunk, out);
@@ -141,6 +141,8 @@ public class ExternalMergeSort<T> {
 
     public static class Chunk<T> extends ArrayList<T> {
         private boolean isLast;
+        public Chunk() {
+        }
         public Chunk(int chunkSize) {
             super(chunkSize);
         }
@@ -153,7 +155,7 @@ public class ExternalMergeSort<T> {
     }
     
     private Chunk<T> readChunk(Iterator<T> input) {
-        Chunk<T> result = new Chunk<T>();
+        Chunk<T> result = new Chunk<T>(250);
         int c = 0;
         while (input.hasNext()) {
             c++;
