@@ -1,2 +1,2 @@
-exmeso
+External Merge Sort
 ======
