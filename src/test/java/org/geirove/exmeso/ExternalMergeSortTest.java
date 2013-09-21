@@ -13,6 +13,7 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.geirove.exmeso.ExternalMergeSort.JacksonSort;
 import org.geirove.exmeso.ExternalMergeSort.MergeIterator;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ExternalMergeSortTest {
@@ -45,9 +46,8 @@ public class ExternalMergeSortTest {
     private static final StringPojo C = new StringPojo("C");
     private static final StringPojo D = new StringPojo("D");
     private static final StringPojo E = new StringPojo("E");
-
-    @Test
-    public void test() throws IOException {
+    
+    protected ExternalMergeSort<StringPojo> createMergeSort() {
         Comparator<StringPojo> comparator = new Comparator<StringPojo>() {
             @Override
             public int compare(StringPojo o1, StringPojo o2) {
@@ -56,8 +56,13 @@ public class ExternalMergeSortTest {
         };
         JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(comparator, StringPojo.class);
         String tmpdir = System.getProperty("java.io.tmpdir");
+        return new ExternalMergeSort<StringPojo>(handler, new File(tmpdir), 2);
+    }
+    
+    @Test
+    public void test() throws IOException {
         
-        ExternalMergeSort<StringPojo> sort = new ExternalMergeSort<StringPojo>(handler, new File(tmpdir), 2);
+        ExternalMergeSort<StringPojo> sort = createMergeSort();
 
         List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
         List<StringPojo> input = Arrays.<StringPojo>asList(B, D, E, C, A);
