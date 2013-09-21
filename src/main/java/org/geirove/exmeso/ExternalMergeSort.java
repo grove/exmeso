@@ -32,7 +32,7 @@ public class ExternalMergeSort<T> {
     private boolean distinct;
 
     private int bufferSize = 8192;
-    private int chunkSize = 1000;
+    private int chunkSize = 2;
     private int chunkBytes = 100000000; // 100 Mb
 
     public ExternalMergeSort(SortHandler<T> handler, File tmpdir) {
@@ -142,6 +142,16 @@ public class ExternalMergeSort<T> {
         }
     }
 
+    public MergeIterator<T> mergeSort(Iterator<T> iter) throws IOException {
+        List<File> files = sortChunks(iter);
+        return mergeIterator(files);
+    }
+
+    public MergeIterator<T> mergeSort(InputStream input) throws IOException {
+        List<File> files = sortChunks(input);
+        return mergeIterator(files);
+    }
+    
     private MergeIterator<T> mergeIterator(List<File> files) throws IOException {
         List<ChunkFile<T>> chunkFiles = new ArrayList<ChunkFile<T>>(files.size());
         for  (File file : files) {
@@ -172,13 +182,14 @@ public class ExternalMergeSort<T> {
 
         private void readNext() {
 //            System.out.println("X1: " + next);
-            T next_ = null;
-            while (!pq.isEmpty()) {
+            T next_;
+            if (pq.isEmpty()) {
+                next_ = null;
+            } else {
                 ChunkFile<T> cf = pq.poll();
                 next_ = cf.pop();
                 if (!cf.isEmpty()) {
                     pq.add(cf);
-                    break;
                 }
             }
             this.next = next_;
@@ -213,43 +224,49 @@ public class ExternalMergeSort<T> {
 
     private static class ChunkFile<T> implements Comparable<ChunkFile<T>>, Closeable {
 
-        private InputStream input;
-        private SortHandler<T> handler;
+        private final File file;
+        private final InputStream input;
+        private final SortHandler<T> handler;
         
         private Iterator<T> iter;
         private T next;
         
         private ChunkFile(final File file, SortHandler<T> handler) throws IOException {
+            this.file = file;
             this.handler = handler;
             input = new BufferedInputStream(new FileInputStream(file), 8192) {
-                @Override
-                public int read() throws IOException {
-                    int c = super.read();
-                    System.out.println(file + " c1: " + (char)c);
-                    return c;
-                }
-                @Override
-                public int read(byte[] b) throws IOException {
-                    int c = super.read(b);
-                    System.out.println(file + "c2: " + new String(b));
-                    return c;
-                }
-                @Override
-                public int read(byte[] b, int off, int len) throws IOException {
-                    int c = super.read(b, off, len);
-                    System.out.println(file + "c3: " + new String(b) + " " + off + " " + len + " " + c);
-                    return c;
-                }
-                @Override
-                public void close() throws IOException {
-                    super.close();
-                }
-                
+//                @Override
+//                public int read() throws IOException {
+//                    int c = super.read();
+//                    System.out.println(file + " c1: " + (char)c);
+//                    return c;
+//                }
+//                @Override
+//                public int read(byte[] b) throws IOException {
+//                    int c = super.read(b);
+//                    System.out.println(file + "c2: " + new String(b));
+//                    return c;
+//                }
+//                @Override
+//                public int read(byte[] b, int off, int len) throws IOException {
+//                    int c = super.read(b, off, len);
+//                    System.out.println(file + "c3: " + new String(b) + " " + off + " " + len + " " + c);
+//                    return c;
+//                }
+//                @Override
+//                public void close() throws IOException {
+//                    super.close();
+//                }
             };
             iter = handler.readValues(input);
             readNext();
         }
 
+        @Override
+        public String toString() {
+            return "Chunk[next=" + next + ", file=" + file + "]";
+        }
+        
         private void readNext() {
             this.next = iter.hasNext() ? iter.next() : null;
 //            System.out.println("G: " + next);
@@ -267,7 +284,9 @@ public class ExternalMergeSort<T> {
 
         @Override
         public int compareTo(ChunkFile<T> o) {
-            return handler.compareChunks(next, o.next);
+            int c = handler.compareChunks(next, o.next);
+//            System.out.println("" + c + " " + next + " " + o.next);
+            return c;
         }
 
         @Override
@@ -336,8 +355,7 @@ public class ExternalMergeSort<T> {
     }
 
     private ChunkList<T> readChunk(Iterator<T> input) {
-        final int chunkSize = 1000;
-        ChunkList<T> result = new ChunkList<T>(chunkSize/4);
+        ChunkList<T> result = new ChunkList<T>(Math.max(2, chunkSize/4));
         int c = 0;
         while (input.hasNext()) {
             c++;
@@ -377,25 +395,17 @@ public class ExternalMergeSort<T> {
         ExternalMergeSort<StringPojo> sort = new ExternalMergeSort<StringPojo>(writer, new File("/tmp"));
 
         // load chunk array from iterator
-        List<StringPojo> chunk = Arrays.<StringPojo>asList(new StringPojo("B"), new StringPojo("C"), new StringPojo("A"));
+        List<StringPojo> chunk = Arrays.<StringPojo>asList(new StringPojo("B"), new StringPojo("D"), new StringPojo("E"), new StringPojo("C"), new StringPojo("A"));
 
-        List<File> files = sort.sortChunks(chunk.iterator());
-        MergeIterator<StringPojo> iter = sort.mergeIterator(files);
-        while (iter.hasNext()) {
-            StringPojo o = iter.next();
-            System.out.println("O: " + o);
+        MergeIterator<StringPojo> iter = sort.mergeSort(chunk.iterator());
+        try {
+            while (iter.hasNext()) {
+                StringPojo o = iter.next();
+                System.out.println("O: " + o);
+            }
+        } finally {
+            iter.close();
         }
-//        // sort chunk array of objects to file
-//        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File("/tmp/sort.temp")));
-//        try {
-//            try {
-//                sort.sortAndWriteChunk(chunk, out);
-//            } finally {
-//                writer.close();
-//            }
-//        } finally {
-//            out.close();
-//        }
     }
 
 }
