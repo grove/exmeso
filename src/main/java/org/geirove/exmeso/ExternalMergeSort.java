@@ -26,17 +26,16 @@ public class ExternalMergeSort<T> {
     private final SortHandler<T> handler;
     private final File tmpdir;
 
-    @SuppressWarnings("unused")
-    private boolean distinct;
-
     private int bufferSize = 8192;
     private int chunkSize = 1000;
-    private boolean deleteOnClose = false;
+    private boolean deleteOnClose = true;
+    private boolean distinct = false;
     
-    public ExternalMergeSort(SortHandler<T> handler, File tmpdir, int chunkSize) {
+    public ExternalMergeSort(SortHandler<T> handler, File tmpdir, int chunkSize, boolean distinct) {
         this.handler = handler;
         this.tmpdir = tmpdir;
         this.chunkSize = chunkSize;
+        this.distinct = distinct;
     }
 
     public static interface SortHandler<T> extends Closeable {
@@ -109,24 +108,27 @@ public class ExternalMergeSort<T> {
 
     public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
         List<File> files = sortChunks(values);
-        return new MergeIterator<T>(files, handler, deleteOnClose);
+        return new MergeIterator<T>(files, handler, deleteOnClose, distinct);
     }
 
     public MergeIterator<T> mergeSort(InputStream input) throws IOException {
         List<File> files = sortChunks(input);
-        return new MergeIterator<T>(files, handler, deleteOnClose);
+        return new MergeIterator<T>(files, handler, deleteOnClose, distinct);
     }
 
     public static class MergeIterator<T> implements Iterator<T>, Closeable {
         
         private final PriorityQueue<ChunkFile<T>> pq;
         private final List<ChunkFile<T>> cfs;
+
         private final boolean deleteOnClose;
+        private boolean distinct;
         
         private T next;
         
-        MergeIterator(List<File> files, SortHandler<T> handler, boolean deleteOnClose) throws IOException {
+        MergeIterator(List<File> files, SortHandler<T> handler, boolean deleteOnClose, boolean distinct) throws IOException {
             this.deleteOnClose = deleteOnClose;
+            this.distinct = distinct;
             List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(files.size());
             for  (File file : files) {
                 ChunkFile<T> cf = new ChunkFile<T>(file, handler);
@@ -148,10 +150,23 @@ public class ExternalMergeSort<T> {
             if (pq.isEmpty()) {
                 next_ = null;
             } else {
-                ChunkFile<T> cf = pq.poll();
-                next_ = cf.pop();
-                if (!cf.isEmpty()) {
-                    pq.add(cf);
+                if (distinct) {
+                    do {
+                        ChunkFile<T> cf = pq.poll();
+                        next_ = cf.pop();
+                        if (!cf.isEmpty()) {
+                            pq.add(cf);
+                        }
+                        if (!next_.equals(next)) {
+                            break;
+                        }
+                    } while (true);
+                } else {
+                    ChunkFile<T> cf = pq.poll();
+                    next_ = cf.pop();
+                    if (!cf.isEmpty()) {
+                        pq.add(cf);
+                    }
                 }
             }
             this.next = next_;

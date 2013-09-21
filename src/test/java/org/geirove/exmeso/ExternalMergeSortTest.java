@@ -47,7 +47,7 @@ public class ExternalMergeSortTest {
     private static final StringPojo D = new StringPojo("D");
     private static final StringPojo E = new StringPojo("E");
     
-    protected ExternalMergeSort<StringPojo> createMergeSort() {
+    protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
         Comparator<StringPojo> comparator = new Comparator<StringPojo>() {
             @Override
             public int compare(StringPojo o1, StringPojo o2) {
@@ -56,16 +56,28 @@ public class ExternalMergeSortTest {
         };
         JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(comparator, StringPojo.class);
         String tmpdir = System.getProperty("java.io.tmpdir");
-        return new ExternalMergeSort<StringPojo>(handler, new File(tmpdir), 2);
+        return new ExternalMergeSort<StringPojo>(handler, new File(tmpdir), 2, distinct);
     }
     
     @Test
     public void test() throws IOException {
         
-        ExternalMergeSort<StringPojo> sort = createMergeSort();
+        ExternalMergeSort<StringPojo> sort = createMergeSort(false);
+
+        List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, C, D, E);
+        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, C, E, C, A);
+
+        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
+        assertResult(result, expected);
+    }
+    
+    @Test
+    public void testDistinct() throws IOException {
+        
+        ExternalMergeSort<StringPojo> sort = createMergeSort(true);
 
         List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
-        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, E, C, A);
+        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, C, E, C, A);
 
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
