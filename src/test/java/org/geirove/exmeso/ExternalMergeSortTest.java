@@ -1,7 +1,7 @@
 package org.geirove.exmeso;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,9 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.geirove.exmeso.ExternalMergeSort.JacksonSort;
 import org.geirove.exmeso.ExternalMergeSort.MergeIterator;
-import org.junit.Before;
 import org.junit.Test;
 
 public class ExternalMergeSortTest {
