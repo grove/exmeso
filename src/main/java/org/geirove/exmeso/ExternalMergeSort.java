@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -20,7 +19,6 @@ import java.util.PriorityQueue;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class ExternalMergeSort<T> {
@@ -65,13 +63,13 @@ public class ExternalMergeSort<T> {
         private final Class<T> type;
 
         public JacksonSort(Comparator<T> comparator, Class<T> type) {
-            this(DEFAULT_MAPPER, comparator, type);
+            this(comparator, type, DEFAULT_MAPPER);
         }
 
-        public JacksonSort(ObjectMapper mapper, Comparator<T> comparator, Class<T> type) {
-            this.mapper = mapper;
+        public JacksonSort(Comparator<T> comparator, Class<T> type, ObjectMapper mapper) {
             this.comparator = comparator;
             this.type = type;
+            this.mapper = mapper;
         }
 
         @Override
@@ -109,19 +107,6 @@ public class ExternalMergeSort<T> {
 
     }
 
-//    private void mergeFiles(Iterator<T> values, OutputStream out) throws IOException {
-//        List<File> files = sortChunks(iter);
-//        MergeIterator<T> iter = mergeIterator(files);
-//        try {
-//            while (iter.hasNext()) {
-//                T value = iter.next();
-//                handler.writeChunkValue(value, out);
-//            }
-//        } finally {
-//            iter.close();
-//        }
-//    }
-
     public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
         List<File> files = sortChunks(values);
         return new MergeIterator<T>(files, handler, deleteOnClose);
@@ -132,7 +117,7 @@ public class ExternalMergeSort<T> {
         return new MergeIterator<T>(files, handler, deleteOnClose);
     }
 
-    private static class MergeIterator<T> implements Iterator<T>, Closeable {
+    public static class MergeIterator<T> implements Iterator<T>, Closeable {
         
         private final PriorityQueue<ChunkFile<T>> pq;
         private final List<ChunkFile<T>> cfs;
@@ -159,7 +144,6 @@ public class ExternalMergeSort<T> {
         }
 
         private void readNext() {
-//            System.out.println("X1: " + next);
             T next_;
             if (pq.isEmpty()) {
                 next_ = null;
@@ -171,7 +155,6 @@ public class ExternalMergeSort<T> {
                 }
             }
             this.next = next_;
-//            System.out.println("X2: " + next);
         }
         
         @Override
@@ -215,30 +198,7 @@ public class ExternalMergeSort<T> {
         private ChunkFile(final File file, SortHandler<T> handler) throws IOException {
             this.file = file;
             this.handler = handler;
-            input = new BufferedInputStream(new FileInputStream(file), 8192) {
-//                @Override
-//                public int read() throws IOException {
-//                    int c = super.read();
-//                    System.out.println(file + " c1: " + (char)c);
-//                    return c;
-//                }
-//                @Override
-//                public int read(byte[] b) throws IOException {
-//                    int c = super.read(b);
-//                    System.out.println(file + "c2: " + new String(b));
-//                    return c;
-//                }
-//                @Override
-//                public int read(byte[] b, int off, int len) throws IOException {
-//                    int c = super.read(b, off, len);
-//                    System.out.println(file + "c3: " + new String(b) + " " + off + " " + len + " " + c);
-//                    return c;
-//                }
-//                @Override
-//                public void close() throws IOException {
-//                    super.close();
-//                }
-            };
+            input = new BufferedInputStream(new FileInputStream(file), 8192);
             iter = handler.readValues(input);
             readNext();
         }
@@ -250,7 +210,6 @@ public class ExternalMergeSort<T> {
         
         private void readNext() {
             this.next = iter.hasNext() ? iter.next() : null;
-//            System.out.println("G: " + next);
         }
 
         public boolean isEmpty() {
@@ -265,9 +224,7 @@ public class ExternalMergeSort<T> {
 
         @Override
         public int compareTo(ChunkFile<T> o) {
-            int c = handler.compareChunks(next, o.next);
-//            System.out.println("" + c + " " + next + " " + o.next);
-            return c;
+            return handler.compareChunks(next, o.next);
         }
 
         @Override
@@ -341,47 +298,6 @@ public class ExternalMergeSort<T> {
             }
         }
         return result;
-    }
-
-    // -- tests
-
-    public static class StringPojo {
-        private String value;
-        public StringPojo(@JsonProperty("value") String value) {
-            this.value = value;
-        }
-        public String getValue() {
-            return value;
-        }
-        public String toString() {
-            return "{\"value\":" + value + "\"}";
-        }
-    }
-
-    public static void main(String[] args) throws Exception {
-        // receive iterator of objects and write to file(s) of approxiately specified size
-
-        Comparator<StringPojo> comparator = new Comparator<StringPojo>() {
-            @Override
-            public int compare(StringPojo o1, StringPojo o2) {
-                return o1.getValue().compareTo(o2.getValue());
-            }
-        };
-        JacksonSort<StringPojo> writer = new JacksonSort<StringPojo>(comparator, StringPojo.class);
-        ExternalMergeSort<StringPojo> sort = new ExternalMergeSort<StringPojo>(writer, new File("/tmp"), 2);
-
-        // load chunk array from iterator
-        List<StringPojo> chunk = Arrays.<StringPojo>asList(new StringPojo("B"), new StringPojo("D"), new StringPojo("E"), new StringPojo("C"), new StringPojo("A"));
-
-        MergeIterator<StringPojo> iter = sort.mergeSort(chunk.iterator());
-        try {
-            while (iter.hasNext()) {
-                StringPojo o = iter.next();
-                System.out.println("O: " + o);
-            }
-        } finally {
-            iter.close();
-        }
     }
 
 }
