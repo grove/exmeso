@@ -66,7 +66,7 @@ public class ExternalMergeSort<T> {
         if (size > maxOpenFiles) {
             List<File> result = new ArrayList<File>();
             for (int i=0; i < size; i += maxOpenFiles) {
-                List<File> subList = sortedChunks.subList(i, Math.min(maxOpenFiles, size));
+                List<File> subList = sortedChunks.subList(i, Math.min(i+ maxOpenFiles, size));
                 MergeIterator<T> iter = mergeSort(subList);
                 try {
                     File newChunk = writeChunk(iter);
