@@ -36,7 +36,7 @@ public class ExternalMergeSort<T> {
         private int maxOpenFiles = 25;
         private int chunkSize = 1000;
         private int bufferSize = 8192;
-        private boolean deleteOnClose = true;
+        private boolean cleanup = true;
         private boolean distinct = false;
         
         private Config(SortHandler<T> handler) {
@@ -68,8 +68,8 @@ public class ExternalMergeSort<T> {
             return this;
         }
         
-        public Config<T> withDeleteOnClose(boolean deleteOnClose) {
-            this.deleteOnClose = deleteOnClose;
+        public Config<T> withCleanup(boolean cleanup) {
+            this.cleanup = cleanup;
             return this;
         }
         
@@ -89,9 +89,11 @@ public class ExternalMergeSort<T> {
         int compareChunks(T o1, T o2);
 
         void writeChunk(Iterator<T> values, OutputStream out) throws IOException;
+        
         void writeChunkValue(T value, OutputStream out) throws IOException;
 
         Iterator<T> readValues(InputStream input) throws IOException;
+        
     }
 
     public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
@@ -105,7 +107,7 @@ public class ExternalMergeSort<T> {
     }
 
     private MergeIterator<T> mergeSort(List<File> sortedChunks) throws IOException {
-        return new MergeIterator<T>(sortedChunks, handler, config.deleteOnClose, config.distinct, config.bufferSize);
+        return new MergeIterator<T>(sortedChunks, handler, config.cleanup, config.distinct, config.bufferSize);
     }
 
     private List<File> partialMerge(List<File> sortedChunks) throws IOException {
@@ -133,13 +135,13 @@ public class ExternalMergeSort<T> {
         private final PriorityQueue<ChunkFile<T>> pq;
         private final List<ChunkFile<T>> cfs;
 
-        private final boolean deleteOnClose;
-        private boolean distinct;
+        private final boolean cleanup;
+        private final boolean distinct;
 
         private T next;
 
-        MergeIterator(List<File> files, SortHandler<T> handler, boolean deleteOnClose, boolean distinct, int bufferSize) throws IOException {
-            this.deleteOnClose = deleteOnClose;
+        MergeIterator(List<File> files, SortHandler<T> handler, boolean cleanup, boolean distinct, int bufferSize) throws IOException {
+            this.cleanup = cleanup;
             this.distinct = distinct;
             List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(files.size());
             for  (File file : files) {
@@ -204,7 +206,7 @@ public class ExternalMergeSort<T> {
         public void close() throws IOException {
             for (ChunkFile<T> cf : cfs) {
                 cf.close();
-                if (deleteOnClose) {
+                if (cleanup) {
                     cf.delete();
                 }
             }

@@ -57,7 +57,7 @@ public class ExternalMergeSortTest {
                 .withChunkSize(3)
                 .withMaxOpenFiles(2)
                 .withDistinct(distinct)
-                .withDeleteOnClose(true)
+                .withCleanup(true)
                 .build();
     }
 
