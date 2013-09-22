@@ -75,7 +75,7 @@ public class ExternalMergeSort<T> {
                     iter.close();
                 }
             }
-            return result;
+            return partialMerge(result);
         }
         return sortedChunks;
     }
