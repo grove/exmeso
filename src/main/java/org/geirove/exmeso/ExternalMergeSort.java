@@ -20,11 +20,14 @@ public class ExternalMergeSort<T> {
     private final SortHandler<T> handler;
     private final File tmpdir;
 
-    private int bufferSize = 8192;
+    private int maxOpenFiles = 25;
     private int chunkSize = 1000;
+
+    private int bufferSize = 8192;
+
     private boolean deleteOnClose = true;
     private boolean distinct = false;
-    
+
     public ExternalMergeSort(SortHandler<T> handler, File tmpdir, int chunkSize, boolean distinct) {
         this.handler = handler;
         this.tmpdir = tmpdir;
@@ -38,38 +41,61 @@ public class ExternalMergeSort<T> {
 
         int compareChunks(T o1, T o2);
 
-        void writeChunk(List<T> values, OutputStream out) throws IOException;
+        void writeChunk(Iterator<T> values, OutputStream out) throws IOException;
         void writeChunkValue(T value, OutputStream out) throws IOException;
 
         Iterator<T> readValues(InputStream input) throws IOException;
     }
 
     public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
-        List<File> files = sortChunks(values);
-        return new MergeIterator<T>(files, handler, deleteOnClose, distinct);
+        List<File> files = partialMerge(sortChunks(values));
+        return mergeSort(files);
     }
 
     public MergeIterator<T> mergeSort(InputStream input) throws IOException {
-        List<File> files = sortChunks(input);
-        return new MergeIterator<T>(files, handler, deleteOnClose, distinct);
+        List<File> files = partialMerge(sortChunks(input));
+        return mergeSort(files);
+    }
+
+    private MergeIterator<T> mergeSort(List<File> sortedChunks) throws IOException {
+        return new MergeIterator<T>(sortedChunks, handler, deleteOnClose, distinct, bufferSize);
+    }
+
+    private List<File> partialMerge(List<File> sortedChunks) throws IOException {
+        int size = sortedChunks.size();
+        if (size > maxOpenFiles) {
+            List<File> result = new ArrayList<File>();
+            for (int i=0; i < size; i += maxOpenFiles) {
+                List<File> subList = sortedChunks.subList(i, Math.min(maxOpenFiles, size));
+                MergeIterator<T> iter = mergeSort(subList);
+                try {
+                    File newChunk = writeChunk(iter);
+                    result.add(newChunk);
+                } finally {
+                    iter.close();
+                }
+            }
+            return result;
+        }
+        return sortedChunks;
     }
 
     public static class MergeIterator<T> implements Iterator<T>, Closeable {
-        
+
         private final PriorityQueue<ChunkFile<T>> pq;
         private final List<ChunkFile<T>> cfs;
 
         private final boolean deleteOnClose;
         private boolean distinct;
-        
+
         private T next;
-        
-        MergeIterator(List<File> files, SortHandler<T> handler, boolean deleteOnClose, boolean distinct) throws IOException {
+
+        MergeIterator(List<File> files, SortHandler<T> handler, boolean deleteOnClose, boolean distinct, int bufferSize) throws IOException {
             this.deleteOnClose = deleteOnClose;
             this.distinct = distinct;
             List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(files.size());
             for  (File file : files) {
-                ChunkFile<T> cf = new ChunkFile<T>(file, handler);
+                ChunkFile<T> cf = new ChunkFile<T>(file, handler, bufferSize);
                 cfs.add(cf);
             }
             this.cfs = cfs;
@@ -109,7 +135,7 @@ public class ExternalMergeSort<T> {
             }
             this.next = next_;
         }
-        
+
         @Override
         public boolean hasNext() {
             return next != null;
@@ -126,7 +152,7 @@ public class ExternalMergeSort<T> {
         public void remove() {
             throw new UnsupportedOperationException();
         }
-        
+
         @Override
         public void close() throws IOException {
             for (ChunkFile<T> cf : cfs) {
@@ -136,7 +162,7 @@ public class ExternalMergeSort<T> {
                 }
             }
         }
-        
+
     }
 
     private static class ChunkFile<T> implements Comparable<ChunkFile<T>>, Closeable {
@@ -144,14 +170,14 @@ public class ExternalMergeSort<T> {
         private final File file;
         private final InputStream input;
         private final SortHandler<T> handler;
-        
+
         private Iterator<T> iter;
         private T next;
-        
-        private ChunkFile(final File file, SortHandler<T> handler) throws IOException {
+
+        private ChunkFile(final File file, SortHandler<T> handler, int bufferSize) throws IOException {
             this.file = file;
             this.handler = handler;
-            input = new BufferedInputStream(new FileInputStream(file), 8192);
+            input = new BufferedInputStream(new FileInputStream(file), bufferSize);
             iter = handler.readValues(input);
             readNext();
         }
@@ -160,7 +186,7 @@ public class ExternalMergeSort<T> {
         public String toString() {
             return "Chunk[next=" + next + ", file=" + file + "]";
         }
-        
+
         private void readNext() {
             this.next = iter.hasNext() ? iter.next() : null;
         }
@@ -188,7 +214,7 @@ public class ExternalMergeSort<T> {
         public void delete() {
             file.delete();
         }
-        
+
     }
 
     private List<File> sortChunks(InputStream input) throws IOException {
@@ -198,13 +224,13 @@ public class ExternalMergeSort<T> {
         while (iter.hasNext()) {
             chunk.add(iter.next());
             if (chunk.size() > chunkSize) {
-                File chunkFile = writeChunk(chunk);
+                File chunkFile = sortAndWriteChunk(chunk);
                 result.add(chunkFile);
                 chunk = new ArrayList<T>(Math.max(2, chunkSize/4));
             }
         }
         if (!chunk.isEmpty()) {
-            File chunkFile = writeChunk(chunk);
+            File chunkFile = sortAndWriteChunk(chunk);
             result.add(chunkFile);
         }
         return result;
@@ -214,7 +240,7 @@ public class ExternalMergeSort<T> {
         List<File> result = new ArrayList<File>();
         while (input.hasNext()) {
             List<T> chunk = readChunk(input);
-            File chunkFile = writeChunk(chunk);
+            File chunkFile = sortAndWriteChunk(chunk);
             result.add(chunkFile);
         }
         return result;
@@ -223,17 +249,17 @@ public class ExternalMergeSort<T> {
     protected File createChunkFile() throws IOException {
         return File.createTempFile("exmeso-", "", tmpdir);
     }
-    
-    private File writeChunk(List<T> values) throws IOException {
+
+    private File sortAndWriteChunk(List<T> values) throws IOException {
+        handler.sortChunk(values);
+        return writeChunk(values.iterator());
+    }
+
+    private File writeChunk(Iterator<T> values) throws IOException {
         File chunkFile = createChunkFile();
         OutputStream out = new BufferedOutputStream(new FileOutputStream(chunkFile), bufferSize);
         try {
-            try {
-                handler.sortChunk(values);
-                handler.writeChunk(values, out);
-            } finally {
-                handler.close();
-            }
+            handler.writeChunk(values, out);
         } finally {
             out.close();
         }

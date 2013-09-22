@@ -12,7 +12,6 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.geirove.exmeso.ExternalMergeSort.SortHandler;
 
 public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
 
@@ -36,9 +35,10 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
     }
 
     @Override
-    public void writeChunk(List<T> values, OutputStream out) throws IOException{
-        for (T value : values) {
-            writeChunkValue(value, out);
+    public void writeChunk(Iterator<T> values, OutputStream out) throws IOException{
+        while (values.hasNext()) {
+            T next = values.next();
+            writeChunkValue(next, out);
         }
     }
 
