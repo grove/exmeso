@@ -63,53 +63,37 @@ public class ExternalMergeSortTest {
 
     @Test
     public void test() throws IOException {
-
-        ExternalMergeSort<StringPojo> sort = createMergeSort(false);
-
-        List<StringPojo> expected = Arrays.asList(A, B, C, D, E);
-        List<StringPojo> input = Arrays.asList(B, D, E, C, A);
-
-        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
-        assertResult(result, expected);
+        assertSorted(
+                Arrays.asList(B, D, E, C, A), 
+                Arrays.asList(A, B, C, D, E), false);
     }
 
     @Test
     public void testWithDuplicates() throws IOException {
-
-        ExternalMergeSort<StringPojo> sort = createMergeSort(false);
-
-        List<StringPojo> expected = Arrays.asList(A, A, B, B, B, C, C, D, E);
-        List<StringPojo> input = Arrays.asList(B, D, C, B, B, E, A, C, A);
-
-        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
-        assertResult(result, expected);
+        assertSorted(
+                Arrays.asList(B, D, C, B, B, E, A, C, A), 
+                Arrays.asList(A, A, B, B, B, C, C, D, E), false);
     }
 
     @Test
     public void testDistinct() throws IOException {
-
-        ExternalMergeSort<StringPojo> sort = createMergeSort(true);
-
-        List<StringPojo> expected = Arrays.asList(A, B, C, D, E);
-        List<StringPojo> input = Arrays.asList(B, D, E, C, A);
-
-        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
-        assertResult(result, expected);
+        assertSorted(
+                Arrays.asList(B, D, E, C, A), 
+                Arrays.asList(A, B, C, D, E), true);
     }
 
     @Test
     public void testDistinctWithDuplicates() throws IOException {
-
-        ExternalMergeSort<StringPojo> sort = createMergeSort(true);
-
-        List<StringPojo> expected = Arrays.asList(A, B, C, D, E);
-        List<StringPojo> input = Arrays.asList(B, D, C, B, B, E, A, C, A);
-
-        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
-        assertResult(result, expected);
+        assertSorted(
+                Arrays.asList(B, D, C, B, B, E, A, C, A), 
+                Arrays.asList(A, B, C, D, E), true);
     }
 
-    private void assertResult(MergeIterator<StringPojo> result, List<StringPojo> expected) throws IOException {
+    private void assertSorted(List<StringPojo> input, List<StringPojo> expected, boolean distinct) throws IOException {
+        ExternalMergeSort<StringPojo> sort = createMergeSort(distinct);
+
+        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
+        
         Iterator<StringPojo> iter = expected.iterator();
         try {
             while (result.hasNext()) {
