@@ -62,8 +62,20 @@ public class ExternalMergeSortTest {
         
         ExternalMergeSort<StringPojo> sort = createMergeSort(false);
 
-        List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, C, D, E);
-        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, C, E, C, A);
+        List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
+        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, E, C, A);
+
+        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
+        assertResult(result, expected);
+    }
+    
+    @Test
+    public void testWithDuplicates() throws IOException {
+        
+        ExternalMergeSort<StringPojo> sort = createMergeSort(false);
+
+        List<StringPojo> expected = Arrays.<StringPojo>asList(A, A, B, B, B, C, C, D, E);
+        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, C, B, B, E, A, C, A);
 
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
@@ -75,7 +87,19 @@ public class ExternalMergeSortTest {
         ExternalMergeSort<StringPojo> sort = createMergeSort(true);
 
         List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
-        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, C, E, C, A);
+        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, E, C, A);
+
+        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
+        assertResult(result, expected);
+    }
+    
+    @Test
+    public void testDistinctWithDuplicates() throws IOException {
+        
+        ExternalMergeSort<StringPojo> sort = createMergeSort(true);
+
+        List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
+        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, C, B, B, E, A, C, A);
 
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
@@ -96,6 +120,7 @@ public class ExternalMergeSortTest {
             if (iter.hasNext()) {
                 fail("Fewer than expected");
             }
+            System.out.println("-----");
         } finally {
             result.close();
         }
