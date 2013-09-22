@@ -45,13 +45,13 @@ public class ExternalMergeSortTest {
     private static final StringPojo E = new StringPojo("E");
 
     protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
-        Comparator<StringPojo> comparator = new Comparator<StringPojo>() {
+
+        JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(StringPojo.class, new Comparator<StringPojo>() {
             @Override
             public int compare(StringPojo o1, StringPojo o2) {
                 return o1.getValue().compareTo(o2.getValue());
             }
-        };
-        JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(comparator, StringPojo.class);
+        });
 
         return ExternalMergeSort.newSorter(handler)
                 .withChunkSize(3)
@@ -93,7 +93,7 @@ public class ExternalMergeSortTest {
         ExternalMergeSort<StringPojo> sort = createMergeSort(distinct);
 
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
-        
+
         Iterator<StringPojo> iter = expected.iterator();
         try {
             while (result.hasNext()) {

@@ -111,6 +111,7 @@ public class ExternalMergeSort<T> {
     }
 
     private List<File> partialMerge(List<File> sortedChunks) throws IOException {
+        // TODO: only partial merge down to maxOpenFiles
         int size = sortedChunks.size();
         if (size > config.maxOpenFiles) {
             List<File> result = new ArrayList<File>();

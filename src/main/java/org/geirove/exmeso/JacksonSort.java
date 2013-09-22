@@ -20,17 +20,17 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
         configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
     }};
 
-    private final ObjectMapper mapper;
-    private final Comparator<T> comparator;
     private final Class<T> type;
+    private final Comparator<T> comparator;
+    private final ObjectMapper mapper;
 
-    public JacksonSort(Comparator<T> comparator, Class<T> type) {
-        this(comparator, type, DEFAULT_MAPPER);
+    public JacksonSort(Class<T> type, Comparator<T> comparator) {
+        this(type, comparator, DEFAULT_MAPPER);
     }
 
-    public JacksonSort(Comparator<T> comparator, Class<T> type, ObjectMapper mapper) {
-        this.comparator = comparator;
+    public JacksonSort(Class<T> type, Comparator<T> comparator, ObjectMapper mapper) {
         this.type = type;
+        this.comparator = comparator;
         this.mapper = mapper;
     }
 
