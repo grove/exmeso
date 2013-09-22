@@ -98,15 +98,15 @@ public class ExternalMergeSort<T> {
 
     public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
         List<File> files = partialMerge(writeSortedChunks(values));
-        return mergeSort(files);
+        return merge(files);
     }
 
     public MergeIterator<T> mergeSort(InputStream input) throws IOException {
         List<File> files = partialMerge(writeSortedChunks(input));
-        return mergeSort(files);
+        return merge(files);
     }
 
-    private MergeIterator<T> mergeSort(List<File> sortedChunks) throws IOException {
+    private MergeIterator<T> merge(List<File> sortedChunks) throws IOException {
         return new MergeIterator<T>(sortedChunks, handler, config.cleanup, config.distinct, config.bufferSize);
     }
 
@@ -117,7 +117,7 @@ public class ExternalMergeSort<T> {
             List<File> result = new ArrayList<File>();
             for (int i=0; i < size; i += config.maxOpenFiles) {
                 List<File> subList = sortedChunks.subList(i, Math.min(i + config.maxOpenFiles, size));
-                MergeIterator<T> iter = mergeSort(subList);
+                MergeIterator<T> iter = merge(subList);
                 try {
                     File chunk = writeChunk(iter);
                     result.add(chunk);
