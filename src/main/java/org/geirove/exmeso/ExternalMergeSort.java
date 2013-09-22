@@ -97,12 +97,12 @@ public class ExternalMergeSort<T> {
     }
 
     public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
-        List<File> files = partialMerge(sortChunks(values));
+        List<File> files = partialMerge(writeSortedChunks(values));
         return mergeSort(files);
     }
 
     public MergeIterator<T> mergeSort(InputStream input) throws IOException {
-        List<File> files = partialMerge(sortChunks(input));
+        List<File> files = partialMerge(writeSortedChunks(input));
         return mergeSort(files);
     }
 
@@ -119,7 +119,6 @@ public class ExternalMergeSort<T> {
                 MergeIterator<T> iter = mergeSort(subList);
                 try {
                     File chunk = writeChunk(iter);
-                    // System.out.println(chunk + " <- " + subList);
                     result.add(chunk);
                 } finally {
                     iter.close();
@@ -266,40 +265,40 @@ public class ExternalMergeSort<T> {
 
     }
 
-    private List<File> sortChunks(InputStream input) throws IOException {
+    protected File createChunkFile() throws IOException {
+        return File.createTempFile("exmeso-", "", config.tempDirectory);
+    }
+
+    private List<File> writeSortedChunks(InputStream input) throws IOException {
         List<File> result = new ArrayList<File>();
         Iterator<T> iter = handler.readValues(input);
         List<T> chunk = new ArrayList<T>(Math.max(2, config.chunkSize/4));
         while (iter.hasNext()) {
             chunk.add(iter.next());
             if (chunk.size() > config.chunkSize) {
-                File chunkFile = sortAndWriteChunk(chunk);
+                File chunkFile = writeSortedChunk(chunk);
                 result.add(chunkFile);
                 chunk = new ArrayList<T>(Math.max(2, config.chunkSize/4));
             }
         }
         if (!chunk.isEmpty()) {
-            File chunkFile = sortAndWriteChunk(chunk);
+            File chunkFile = writeSortedChunk(chunk);
             result.add(chunkFile);
         }
         return result;
     }
 
-    private List<File> sortChunks(Iterator<T> input) throws IOException {
+    private List<File> writeSortedChunks(Iterator<T> input) throws IOException {
         List<File> result = new ArrayList<File>();
         while (input.hasNext()) {
             List<T> chunk = readChunk(input);
-            File chunkFile = sortAndWriteChunk(chunk);
+            File chunkFile = writeSortedChunk(chunk);
             result.add(chunkFile);
         }
         return result;
     }
 
-    protected File createChunkFile() throws IOException {
-        return File.createTempFile("exmeso-", "", config.tempDirectory);
-    }
-
-    private File sortAndWriteChunk(List<T> values) throws IOException {
+    private File writeSortedChunk(List<T> values) throws IOException {
         handler.sortChunk(values);
         return writeChunk(values.iterator());
     }
