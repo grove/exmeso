@@ -1,11 +1,29 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <name>Exmeso - External Merge Sort</name>
   <groupId>org.geirove</groupId>
   <artifactId>exmeso</artifactId>
   <packaging>jar</packaging>
   <version>0.0.1-SNAPSHOT</version>
+
+  <name>Exmeso - External Merge Sort</name>
+  <description>External Merge Sort in Java</description>
+  <url>https://github.com/grove/exmeso</url>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <scm>
+    <connection>scm:git:git://github.com/grove/exmeso.git</connection>
+    <developerConnection>scm:git:git://github.com/grove/exmeso.git</developerConnection>
+    <url>git@github.com:grove/exmeso.git</url>
+    <tag>HEAD</tag>
+  </scm>
 
   <dependencies>
     <dependency>
