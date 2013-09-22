@@ -54,8 +54,10 @@ public class ExternalMergeSortTest {
         JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(comparator, StringPojo.class);
 
         return ExternalMergeSort.newSorter(handler)
-                .withChunkSize(2)
+                .withChunkSize(3)
+                .withMaxOpenFiles(2)
                 .withDistinct(distinct)
+                .withDeleteOnClose(true)
                 .build();
     }
 
@@ -64,8 +66,8 @@ public class ExternalMergeSortTest {
 
         ExternalMergeSort<StringPojo> sort = createMergeSort(false);
 
-        List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
-        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, E, C, A);
+        List<StringPojo> expected = Arrays.asList(A, B, C, D, E);
+        List<StringPojo> input = Arrays.asList(B, D, E, C, A);
 
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
@@ -76,8 +78,8 @@ public class ExternalMergeSortTest {
 
         ExternalMergeSort<StringPojo> sort = createMergeSort(false);
 
-        List<StringPojo> expected = Arrays.<StringPojo>asList(A, A, B, B, B, C, C, D, E);
-        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, C, B, B, E, A, C, A);
+        List<StringPojo> expected = Arrays.asList(A, A, B, B, B, C, C, D, E);
+        List<StringPojo> input = Arrays.asList(B, D, C, B, B, E, A, C, A);
 
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
@@ -88,8 +90,8 @@ public class ExternalMergeSortTest {
 
         ExternalMergeSort<StringPojo> sort = createMergeSort(true);
 
-        List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
-        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, E, C, A);
+        List<StringPojo> expected = Arrays.asList(A, B, C, D, E);
+        List<StringPojo> input = Arrays.asList(B, D, E, C, A);
 
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
@@ -100,8 +102,8 @@ public class ExternalMergeSortTest {
 
         ExternalMergeSort<StringPojo> sort = createMergeSort(true);
 
-        List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
-        List<StringPojo> input = Arrays.<StringPojo>asList(B, D, C, B, B, E, A, C, A);
+        List<StringPojo> expected = Arrays.asList(A, B, C, D, E);
+        List<StringPojo> input = Arrays.asList(B, D, C, B, B, E, A, C, A);
 
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);

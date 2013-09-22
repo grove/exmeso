@@ -116,12 +116,14 @@ public class ExternalMergeSort<T> {
                 List<File> subList = sortedChunks.subList(i, Math.min(i + config.maxOpenFiles, size));
                 MergeIterator<T> iter = mergeSort(subList);
                 try {
-                    result.add(writeChunk(iter));
+                    File chunk = writeChunk(iter);
+                    // System.out.println(chunk + " <- " + subList);
+                    result.add(chunk);
                 } finally {
                     iter.close();
                 }
             }
-            return result;
+            return partialMerge(result);
         }
         return sortedChunks;
     }
