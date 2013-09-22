@@ -3,7 +3,6 @@ package org.geirove.exmeso;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -44,7 +43,7 @@ public class ExternalMergeSortTest {
     private static final StringPojo C = new StringPojo("C");
     private static final StringPojo D = new StringPojo("D");
     private static final StringPojo E = new StringPojo("E");
-    
+
     protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
         Comparator<StringPojo> comparator = new Comparator<StringPojo>() {
             @Override
@@ -53,13 +52,16 @@ public class ExternalMergeSortTest {
             }
         };
         JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(comparator, StringPojo.class);
-        String tmpdir = System.getProperty("java.io.tmpdir");
-        return new ExternalMergeSort<StringPojo>(handler, new File(tmpdir), 2, distinct);
+
+        return ExternalMergeSort.newSorter(handler)
+                .withChunkSize(2)
+                .withDistinct(distinct)
+                .build();
     }
-    
+
     @Test
     public void test() throws IOException {
-        
+
         ExternalMergeSort<StringPojo> sort = createMergeSort(false);
 
         List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
@@ -68,10 +70,10 @@ public class ExternalMergeSortTest {
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
     }
-    
+
     @Test
     public void testWithDuplicates() throws IOException {
-        
+
         ExternalMergeSort<StringPojo> sort = createMergeSort(false);
 
         List<StringPojo> expected = Arrays.<StringPojo>asList(A, A, B, B, B, C, C, D, E);
@@ -80,10 +82,10 @@ public class ExternalMergeSortTest {
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
     }
-    
+
     @Test
     public void testDistinct() throws IOException {
-        
+
         ExternalMergeSort<StringPojo> sort = createMergeSort(true);
 
         List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
@@ -92,10 +94,10 @@ public class ExternalMergeSortTest {
         MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
         assertResult(result, expected);
     }
-    
+
     @Test
     public void testDistinctWithDuplicates() throws IOException {
-        
+
         ExternalMergeSort<StringPojo> sort = createMergeSort(true);
 
         List<StringPojo> expected = Arrays.<StringPojo>asList(A, B, C, D, E);
