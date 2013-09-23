@@ -84,13 +84,11 @@ public class ExternalMergeSort<T> {
     
     public static interface SortHandler<T> extends Closeable {
 
-        void sortChunk(List<T> values);
+        void sortValues(List<T> values);
 
-        int compareChunks(T o1, T o2);
+        int compareValues(T o1, T o2);
 
-        void writeChunk(Iterator<T> values, OutputStream out) throws IOException;
-        
-        void writeChunkValue(T value, OutputStream out) throws IOException;
+        void writeValues(Iterator<T> values, OutputStream out) throws IOException;
 
         Iterator<T> readValues(InputStream input) throws IOException;
         
@@ -204,11 +202,19 @@ public class ExternalMergeSort<T> {
 
         @Override
         public void close() throws IOException {
+            IOException ex = null;
             for (ChunkFile<T> cf : cfs) {
-                cf.close();
-                if (cleanup) {
-                    cf.delete();
+                try {
+                    cf.close();
+                    if (cleanup) {
+                        cf.delete();
+                    }
+                } catch (IOException e) {
+                    ex = e; 
                 }
+            }
+            if (ex != null) {
+                throw ex;
             }
         }
 
@@ -252,7 +258,7 @@ public class ExternalMergeSort<T> {
 
         @Override
         public int compareTo(ChunkFile<T> o) {
-            return handler.compareChunks(next, o.next);
+            return handler.compareValues(next, o.next);
         }
 
         @Override
@@ -267,7 +273,9 @@ public class ExternalMergeSort<T> {
     }
 
     protected File createChunkFile() throws IOException {
-        return File.createTempFile("exmeso-", "", config.tempDirectory);
+        File result = File.createTempFile("exmeso-", "", config.tempDirectory);
+//        System.out.println("F: " + result);
+        return result;
     }
 
     private List<File> writeSortedChunks(InputStream input) throws IOException {
@@ -300,7 +308,7 @@ public class ExternalMergeSort<T> {
     }
 
     private File writeSortedChunk(List<T> values) throws IOException {
-        handler.sortChunk(values);
+        handler.sortValues(values);
         return writeChunk(values.iterator());
     }
 
@@ -308,7 +316,7 @@ public class ExternalMergeSort<T> {
         File chunkFile = createChunkFile();
         OutputStream out = new BufferedOutputStream(new FileOutputStream(chunkFile), config.bufferSize);
         try {
-            handler.writeChunk(values, out);
+            handler.writeValues(values, out);
         } finally {
             out.close();
         }

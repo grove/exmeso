@@ -33,35 +33,36 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
         this.comparator = comparator;
         this.mapper = mapper;
     }
-
-    @Override
-    public void writeChunk(Iterator<T> values, OutputStream out) throws IOException{
-        while (values.hasNext()) {
-            T next = values.next();
-            writeChunkValue(next, out);
-        }
-    }
-
-    @Override
-    public void writeChunkValue(T value, OutputStream out) throws IOException{
-        mapper.writeValue(out, value);
-    }
-
-    @Override
-    public int compareChunks(T o1, T o2) {
-        return comparator.compare(o1, o2);
-    }
     
     @Override
-    public void sortChunk(List<T> values) {
+    public void sortValues(List<T> values) {
         Collections.sort(values, comparator);
     }
 
     @Override
+    public int compareValues(T o1, T o2) {
+        return comparator.compare(o1, o2);
+    }
+
+    @Override
+    public void writeValues(Iterator<T> values, OutputStream out) throws IOException{
+        JsonFactory jsonFactory = mapper.getJsonFactory();
+        JsonGenerator jsonGenerator = jsonFactory.createJsonGenerator(out);
+        jsonGenerator.writeStartArray();
+        while (values.hasNext()) {
+            T next = values.next();
+            jsonGenerator.writeObject(next);
+        }
+        jsonGenerator.writeEndArray();
+        jsonGenerator.close();
+    }
+
+    @Override
     public Iterator<T> readValues(InputStream input) throws IOException {
-        JsonFactory jfactory = mapper.getJsonFactory();
-        JsonParser jParser = jfactory.createJsonParser(input);
-        return jParser.readValuesAs(type);
+        JsonFactory jsonFactory = mapper.getJsonFactory();
+        JsonParser jsonParser = jsonFactory.createJsonParser(input);
+        jsonParser.nextToken(); // skip JsonToken.START_ARRAY
+        return jsonParser.readValuesAs(type);
     }
 
     @Override

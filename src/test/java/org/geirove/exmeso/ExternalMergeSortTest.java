@@ -44,23 +44,6 @@ public class ExternalMergeSortTest {
     private static final StringPojo D = new StringPojo("D");
     private static final StringPojo E = new StringPojo("E");
 
-    protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
-
-        JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(StringPojo.class, new Comparator<StringPojo>() {
-            @Override
-            public int compare(StringPojo o1, StringPojo o2) {
-                return o1.getValue().compareTo(o2.getValue());
-            }
-        });
-
-        return ExternalMergeSort.newSorter(handler)
-                .withChunkSize(3)
-                .withMaxOpenFiles(2)
-                .withDistinct(distinct)
-                .withCleanup(true)
-                .build();
-    }
-
     @Test
     public void test() throws IOException {
         assertSorted(
@@ -112,6 +95,23 @@ public class ExternalMergeSortTest {
         } finally {
             result.close();
         }
+    }
+
+    protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
+
+        JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(StringPojo.class, new Comparator<StringPojo>() {
+            @Override
+            public int compare(StringPojo o1, StringPojo o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+
+        return ExternalMergeSort.newSorter(handler)
+                .withChunkSize(3)
+                .withMaxOpenFiles(2)
+                .withDistinct(distinct)
+                .withCleanup(true)
+                .build();
     }
 
 }
