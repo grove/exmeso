@@ -1,4 +1,4 @@
-package org.geirove.exmeso;
+package org.geirove.exmeso.jackson;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -10,10 +10,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.geirove.exmeso.AbstractExternalMergeSortTest;
+import org.geirove.exmeso.ExternalMergeSort;
 import org.geirove.exmeso.ExternalMergeSort.MergeIterator;
 import org.junit.Test;
 
-public class ExternalMergeSortTest {
+public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
 
     public static class StringPojo {
         private String value;
@@ -81,7 +83,7 @@ public class ExternalMergeSortTest {
         try {
             while (result.hasNext()) {
                 StringPojo r = result.next();
-                System.out.println("O: " + r);
+//                System.out.println("O: " + r);
                 if (!iter.hasNext()) {
                     fail("More than expected");
                 }
@@ -112,6 +114,19 @@ public class ExternalMergeSortTest {
                 .withDistinct(distinct)
                 .withCleanup(true)
                 .build();
+    }
+
+    @Test
+    @Override
+    public void testLargeIntegerSort() throws IOException {
+
+        JacksonSort<Integer> handler = new JacksonSort<Integer>(Integer.class, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o1.compareTo(o2);
+            }
+        });
+        performLargeIntegerSort(handler);
     }
 
 }

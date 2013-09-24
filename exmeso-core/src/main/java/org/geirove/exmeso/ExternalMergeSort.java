@@ -117,7 +117,7 @@ public class ExternalMergeSort<T> {
                 List<File> subList = sortedChunks.subList(i, Math.min(i + config.maxOpenFiles, size));
                 MergeIterator<T> iter = merge(subList);
                 try {
-                    File chunk = writeChunk(iter);
+                    File chunk = writeChunk("exmeso-merged-", iter);
                     result.add(chunk);
                 } finally {
                     iter.close();
@@ -272,9 +272,9 @@ public class ExternalMergeSort<T> {
 
     }
 
-    protected File createChunkFile() throws IOException {
-        File result = File.createTempFile("exmeso-", "", config.tempDirectory);
-//        System.out.println("F: " + result);
+    protected File createChunkFile(String prefix) throws IOException {
+        File result = File.createTempFile(prefix, "", config.tempDirectory);
+        System.out.println("F: " + result);
         return result;
     }
 
@@ -309,11 +309,11 @@ public class ExternalMergeSort<T> {
 
     private File writeSortedChunk(List<T> values) throws IOException {
         handler.sortValues(values);
-        return writeChunk(values.iterator());
+        return writeChunk("exmeso-sorted-", values.iterator());
     }
 
-    private File writeChunk(Iterator<T> values) throws IOException {
-        File chunkFile = createChunkFile();
+    private File writeChunk(String prefix, Iterator<T> values) throws IOException {
+        File chunkFile = createChunkFile(prefix);
         OutputStream out = new BufferedOutputStream(new FileOutputStream(chunkFile), config.bufferSize);
         try {
             handler.writeValues(values, out);

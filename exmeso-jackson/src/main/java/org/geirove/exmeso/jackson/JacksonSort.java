@@ -1,4 +1,4 @@
-package org.geirove.exmeso;
+package org.geirove.exmeso.jackson;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
+import org.geirove.exmeso.ExternalMergeSort;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -36,7 +38,9 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
     
     @Override
     public void sortValues(List<T> values) {
+        long st = System.currentTimeMillis();
         Collections.sort(values, comparator);
+        System.out.println("S: " + (System.currentTimeMillis() - st) + "ms");
     }
 
     @Override
@@ -46,6 +50,7 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
 
     @Override
     public void writeValues(Iterator<T> values, OutputStream out) throws IOException{
+        long st = System.currentTimeMillis();
         JsonFactory jsonFactory = mapper.getJsonFactory();
         JsonGenerator jsonGenerator = jsonFactory.createJsonGenerator(out);
         jsonGenerator.writeStartArray();
@@ -55,6 +60,7 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
         }
         jsonGenerator.writeEndArray();
         jsonGenerator.close();
+        System.out.println("W: " + (System.currentTimeMillis() - st) + "ms");
     }
 
     @Override
