@@ -5,7 +5,7 @@ This is a small library that implements [External Merge Sort](http://en.wikipedi
 
 Persistence is handled by an implementation of the SortHandler&lt;T&gt; interface, of which there are currently two implementations:
 
-* JacksonSort - serialization and deserialization using the [Jackson](http://jackson.codehaus.org/) library.
-* KryoSort - serialization and deserialization using the [Kryo](https://code.google.com/p/kryo/) library.
+* JacksonSort&lt;T&gt; - serialization and deserialization using the [Jackson](http://jackson.codehaus.org/) library.
+* KryoSort&lt;T&gt; - serialization and deserialization using the [Kryo](https://code.google.com/p/kryo/) library.
 
-See the [ExternalMergeSortTest](https://github.com/grove/exmeso/blob/master/src/test/java/org/geirove/exmeso/ExternalMergeSortTest.java) class for code examples.
+See the [ExternalMergeSortTest](https://github.com/grove/exmeso/blob/master/exmeso-jackson/src/test/java/org/geirove/exmeso/jackson/ExternalMergeSortTest.java) class for code examples.
