@@ -21,6 +21,10 @@ public class KryoSort<T> implements ExternalMergeSort.SortHandler<T> {
     private final Kryo kryo;
 
     public KryoSort(Class<T> type, Comparator<T> comparator) {
+        this(type, comparator, new Kryo());    
+    }
+
+    public KryoSort(Class<T> type, Comparator<T> comparator, Kryo kryo) {
         this.type = type;
         this.comparator = comparator;
         this.kryo = new Kryo();    

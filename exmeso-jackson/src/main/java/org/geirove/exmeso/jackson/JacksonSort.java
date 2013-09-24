@@ -8,12 +8,11 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import org.geirove.exmeso.ExternalMergeSort;
-
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.geirove.exmeso.ExternalMergeSort;
 
 public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
 

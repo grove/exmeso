@@ -100,7 +100,6 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
     }
 
     protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
-
         JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(StringPojo.class, new Comparator<StringPojo>() {
             @Override
             public int compare(StringPojo o1, StringPojo o2) {
@@ -119,7 +118,6 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
     @Test
     @Override
     public void testLargeIntegerSort() throws IOException {
-
         JacksonSort<Integer> handler = new JacksonSort<Integer>(Integer.class, new Comparator<Integer>() {
             @Override
             public int compare(Integer o1, Integer o2) {
