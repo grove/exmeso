@@ -34,7 +34,9 @@ public class KryoSort<T> implements ExternalMergeSort.SortHandler<T> {
     public void sortValues(List<T> values) {
         long st = System.currentTimeMillis();
         Collections.sort(values, comparator);
-        System.out.println("S: " + (System.currentTimeMillis() - st) + "ms");
+        if (ExternalMergeSort.debug) {
+            System.out.println("S: " + (System.currentTimeMillis() - st) + "ms");
+        }
     }
 
     @Override
@@ -48,11 +50,12 @@ public class KryoSort<T> implements ExternalMergeSort.SortHandler<T> {
         Output output = new Output(out);
         while (values.hasNext()) {
             T next = values.next();
-//            System.out.println("W: " + next);
             kryo.writeObject(output, next);
         }
         output.flush();
-        System.out.println("W: " + (System.currentTimeMillis() - st) + "ms");
+        if (ExternalMergeSort.debug) {
+            System.out.println("W: " + (System.currentTimeMillis() - st) + "ms");
+        }
     }
 
     @Override
@@ -83,9 +86,7 @@ public class KryoSort<T> implements ExternalMergeSort.SortHandler<T> {
 
         @Override
         public T next() {
-            T next = kryo.readObject(input, type);
-//            System.out.println("N: " + next + " " + input.eof() + " " + input.position());
-            return next;
+            return kryo.readObject(input, type);
         }
 
         @Override

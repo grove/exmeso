@@ -83,7 +83,6 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
         try {
             while (result.hasNext()) {
                 StringPojo r = result.next();
-//                System.out.println("O: " + r);
                 if (!iter.hasNext()) {
                     fail("More than expected");
                 }
@@ -93,7 +92,6 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
             if (iter.hasNext()) {
                 fail("Fewer than expected");
             }
-            System.out.println("-----");
         } finally {
             result.close();
         }

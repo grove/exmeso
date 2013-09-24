@@ -46,7 +46,7 @@ public abstract class AbstractExternalMergeSortTest {
                 .withChunkSize(500000)
                 .withMaxOpenFiles(20)
                 .withDistinct(true)
-                .withCleanup(false)
+                .withCleanup(!ExternalMergeSort.debug)
                 .withBufferSize(65536)
                 .build();
         assertSorted(handler, sort, new RandomIntIterator(10000000));
@@ -56,7 +56,9 @@ public abstract class AbstractExternalMergeSortTest {
         long st = System.currentTimeMillis();
         int last = Integer.MIN_VALUE;
         MergeIterator<Integer> iter = sort.mergeSort(input);
-        System.out.println("A: " + (System.currentTimeMillis() - st) + "ms");
+        if (ExternalMergeSort.debug) {
+            System.out.println("A: " + (System.currentTimeMillis() - st) + "ms");
+        }
         try {
             while (iter.hasNext()) {
                 int i = iter.next();
@@ -66,7 +68,9 @@ public abstract class AbstractExternalMergeSortTest {
         } finally {
             iter.close();
         }
-        System.out.println("B: " + (System.currentTimeMillis() - st) + "ms");
+        if (ExternalMergeSort.debug) {
+            System.out.println("B: " + (System.currentTimeMillis() - st) + "ms");
+        }
     }
 
 }

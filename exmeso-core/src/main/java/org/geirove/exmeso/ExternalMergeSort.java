@@ -17,6 +17,8 @@ import java.util.PriorityQueue;
 
 public class ExternalMergeSort<T> {
 
+    public static boolean debug;
+    
     private final SortHandler<T> handler;
     private final Config<T> config;
 
@@ -274,7 +276,9 @@ public class ExternalMergeSort<T> {
 
     protected File createChunkFile(String prefix) throws IOException {
         File result = File.createTempFile(prefix, "", config.tempDirectory);
-        System.out.println("F: " + result);
+        if (debug) {
+            System.out.println("F: " + result);
+        }
         return result;
     }
 

@@ -39,7 +39,9 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
     public void sortValues(List<T> values) {
         long st = System.currentTimeMillis();
         Collections.sort(values, comparator);
-        System.out.println("S: " + (System.currentTimeMillis() - st) + "ms");
+        if (ExternalMergeSort.debug) {
+            System.out.println("S: " + (System.currentTimeMillis() - st) + "ms");
+        }
     }
 
     @Override
@@ -59,7 +61,9 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
         }
         jsonGenerator.writeEndArray();
         jsonGenerator.close();
-        System.out.println("W: " + (System.currentTimeMillis() - st) + "ms");
+        if (ExternalMergeSort.debug) {
+            System.out.println("W: " + (System.currentTimeMillis() - st) + "ms");
+        }
     }
 
     @Override
