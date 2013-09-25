@@ -17,7 +17,7 @@ import java.util.PriorityQueue;
 
 public class ExternalMergeSort<T> {
 
-    public static boolean debug;
+    public static boolean debug = false;
     
     private final SortHandler<T> handler;
     private final Config<T> config;
@@ -111,23 +111,62 @@ public class ExternalMergeSort<T> {
     }
 
     private List<File> partialMerge(List<File> sortedChunks) throws IOException {
-        // TODO: only partial merge down to maxOpenFiles
-        int size = sortedChunks.size();
-        if (size > config.maxOpenFiles) {
-            List<File> result = new ArrayList<File>();
-            for (int i=0; i < size; i += config.maxOpenFiles) {
-                List<File> subList = sortedChunks.subList(i, Math.min(i + config.maxOpenFiles, size));
-                MergeIterator<T> iter = merge(subList);
-                try {
-                    File chunk = writeChunk("exmeso-merged-", iter);
-                    result.add(chunk);
-                } finally {
-                    iter.close();
+        int chunks = sortedChunks.size();
+
+        if (debug) {
+            System.out.println("chunks: " + chunks);
+        }
+        if (chunks > config.maxOpenFiles) {
+            // partial merge down to maxOpenFiles
+            int merges = (chunks-(chunks % config.maxOpenFiles)) / config.maxOpenFiles;
+            int chunksNotMerged = config.maxOpenFiles - merges;
+            int chunksMerged = chunks - chunksNotMerged;
+            int remainingMerges = chunksMerged / merges;
+            int firstMerge = remainingMerges + (chunksMerged % merges);
+     
+            if (debug) {
+                System.out.println("merges: " + merges);
+                System.out.println("chunksNotMerged: " + chunksNotMerged);
+                System.out.println("chunksMerged: " + chunksMerged);
+                System.out.println("firstMerge: " + firstMerge);
+                if (merges > 1) {
+                    System.out.println("remainingMerges: " + remainingMerges);
                 }
+            }
+            
+            List<File> result = new ArrayList<File>();
+
+            // first merge
+            List<File> subList = sortedChunks.subList(0, firstMerge);
+//            System.out.println("first slice: " + 0 + "-" + firstMerge);
+            result.add(mergeSubList(result, subList));
+
+            // remaining merges
+            for (int i=0; i < merges-1; i++) {
+                int offset = firstMerge + (i * remainingMerges);
+//                System.out.println("remaining slice: " + offset + "-" + (offset + remainingMerges));
+                subList = sortedChunks.subList(offset, offset + remainingMerges);
+                result.add(mergeSubList(result, subList));
+            }
+            
+            int lastOffset = firstMerge + ((merges-1)*remainingMerges);
+            result.addAll(sortedChunks.subList(lastOffset, chunks));
+            if (debug) {
+                System.out.println("afterPartialMergeChunks: " + result.size());
             }
             return partialMerge(result);
         }
         return sortedChunks;
+    }
+
+    private File mergeSubList(List<File> result, List<File> subList)
+            throws IOException {
+        MergeIterator<T> iter = merge(subList);
+        try {
+            return writeChunk("exmeso-merged-", iter);
+        } finally {
+            iter.close();
+        }
     }
 
     public static class MergeIterator<T> implements Iterator<T>, Closeable {

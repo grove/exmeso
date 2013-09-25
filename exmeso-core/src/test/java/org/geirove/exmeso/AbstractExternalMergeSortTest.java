@@ -1,6 +1,7 @@
 package org.geirove.exmeso;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -40,19 +41,20 @@ public abstract class AbstractExternalMergeSortTest {
 
     public abstract void testLargeIntegerSort() throws IOException;
 
-    protected void performLargeIntegerSort(SortHandler<Integer> handler) throws IOException {
+    protected void performLargeIntegerSort(SortHandler<Integer> handler, boolean distinct) throws IOException {
         // ten million elements, 500k chunks, max 20 files
         ExternalMergeSort<Integer> sort = ExternalMergeSort.newSorter(handler)
                 .withChunkSize(500000)
-                .withMaxOpenFiles(20)
-                .withDistinct(true)
+                .withMaxOpenFiles(19)
+                .withDistinct(distinct)
                 .withCleanup(!ExternalMergeSort.debug)
                 .withBufferSize(65536)
                 .build();
-        assertSorted(handler, sort, new RandomIntIterator(10000000));
+        int size = 10000000;
+        assertSorted(handler, sort, new RandomIntIterator(size), size, distinct);
     }
 
-    private void assertSorted(SortHandler<Integer> handler, ExternalMergeSort<Integer> sort, Iterator<Integer> input) throws IOException {
+    private void assertSorted(SortHandler<Integer> handler, ExternalMergeSort<Integer> sort, Iterator<Integer> input, int size, boolean distinct) throws IOException {
         long st = System.currentTimeMillis();
         int last = Integer.MIN_VALUE;
         MergeIterator<Integer> iter = sort.mergeSort(input);
@@ -60,10 +62,15 @@ public abstract class AbstractExternalMergeSortTest {
             System.out.println("A: " + (System.currentTimeMillis() - st) + "ms");
         }
         try {
+            int count = 0;
             while (iter.hasNext()) {
+                count ++;
                 int i = iter.next();
                 assertTrue(i + " not sorted after " + last, handler.compareValues(i, last) >= 0);
                 last = i;
+            }
+            if (!distinct && count != size) {
+                fail("Incorrect size: " + count + " vs " + size);
             }
         } finally {
             iter.close();
