@@ -109,7 +109,7 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
                 .withChunkSize(3)
                 .withMaxOpenFiles(2)
                 .withDistinct(distinct)
-                .withCleanup(true)
+                .withCleanup(!ExternalMergeSort.debug)
                 .build();
     }
 
