@@ -52,6 +52,7 @@ public class KryoSort<T> implements ExternalMergeSort.SortHandler<T> {
             T next = values.next();
             kryo.writeObject(output, next);
         }
+        output.flush();
         if (ExternalMergeSort.debug) {
             System.out.println("W: " + (System.currentTimeMillis() - st) + "ms");
         }
