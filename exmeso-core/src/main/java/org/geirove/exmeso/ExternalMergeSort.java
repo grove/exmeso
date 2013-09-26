@@ -18,6 +18,7 @@ import java.util.PriorityQueue;
 public class ExternalMergeSort<T> {
 
     public static boolean debug = false;
+    public static boolean debugMerge = false;
     
     private final SortHandler<T> handler;
     private final Config<T> config;
@@ -113,24 +114,25 @@ public class ExternalMergeSort<T> {
     private List<File> partialMerge(List<File> sortedChunks) throws IOException {
         int chunks = sortedChunks.size();
 
-        if (debug) {
-            System.out.println("chunks: " + chunks);
-        }
         if (chunks > config.maxOpenFiles) {
+            if (debugMerge) {
+                System.out.println("----------------------------");
+                System.out.println("chunks: " + chunks);
+            }
             // partial merge down to maxOpenFiles
             int merges = (chunks-(chunks % config.maxOpenFiles)) / config.maxOpenFiles;
-            int chunksNotMerged = config.maxOpenFiles - merges;
+            int chunksNotMerged = chunks % merges;
             int chunksMerged = chunks - chunksNotMerged;
-            int remainingMerges = chunksMerged / merges;
-            int firstMerge = remainingMerges + (chunksMerged % merges);
+            int subsequentMerges = chunksMerged / merges;
+            int firstMerge = subsequentMerges + (chunksMerged % merges);
      
-            if (debug) {
-                System.out.println("merges: " + merges);
-                System.out.println("chunksNotMerged: " + chunksNotMerged);
-                System.out.println("chunksMerged: " + chunksMerged);
-                System.out.println("firstMerge: " + firstMerge);
+            if (debugMerge) {
+                System.out.printf("merges: %d = (%d - (%d %% %d)) / %d\n", merges, chunks, chunks, config.maxOpenFiles, config.maxOpenFiles);
                 if (merges > 1) {
-                    System.out.println("remainingMerges: " + remainingMerges);
+                    System.out.printf("chunksNotMerged: %d = %d %% %d\n", chunksNotMerged, chunks, merges);
+                    System.out.printf("chunksMerged: %d = %d - %d\n", chunksMerged, chunks, chunksNotMerged);
+                    System.out.printf("firstMerge: %d = %d + (%d %% %d)\n", firstMerge, subsequentMerges, chunksMerged, merges);
+                    System.out.printf("subsequentMerges: %d = %d / %d\n", subsequentMerges, chunksMerged, merges);
                 }
             }
             
@@ -138,20 +140,24 @@ public class ExternalMergeSort<T> {
 
             // first merge
             List<File> subList = sortedChunks.subList(0, firstMerge);
-//            System.out.println("first slice: " + 0 + "-" + firstMerge);
+            if (debugMerge) {
+                System.out.println("first slice: " + 0 + "-" + firstMerge);
+            }
             result.add(mergeSubList(result, subList));
 
-            // remaining merges
+            // subsequent merges
             for (int i=0; i < merges-1; i++) {
-                int offset = firstMerge + (i * remainingMerges);
-//                System.out.println("remaining slice: " + offset + "-" + (offset + remainingMerges));
-                subList = sortedChunks.subList(offset, offset + remainingMerges);
+                int offset = firstMerge + (i * subsequentMerges);
+                if (debugMerge) {
+                    System.out.println("subsequent slice: " + offset + "-" + (offset + subsequentMerges));
+                }
+                subList = sortedChunks.subList(offset, offset + subsequentMerges);
                 result.add(mergeSubList(result, subList));
             }
             
-            int lastOffset = firstMerge + ((merges-1)*remainingMerges);
+            int lastOffset = firstMerge + ((merges-1)*subsequentMerges);
             result.addAll(sortedChunks.subList(lastOffset, chunks));
-            if (debug) {
+            if (debugMerge) {
                 System.out.println("afterPartialMergeChunks: " + result.size());
             }
             return partialMerge(result);

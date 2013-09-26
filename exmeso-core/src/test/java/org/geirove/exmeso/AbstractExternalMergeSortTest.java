@@ -54,6 +54,18 @@ public abstract class AbstractExternalMergeSortTest {
         assertSorted(handler, sort, new RandomIntIterator(size), size, distinct);
     }
 
+    protected void performPrimeIntegerSort(SortHandler<Integer> handler, boolean distinct) throws IOException {
+        ExternalMergeSort<Integer> sort = ExternalMergeSort.newSorter(handler)
+                .withChunkSize(21)
+                .withMaxOpenFiles(7)
+                .withDistinct(distinct)
+                .withCleanup(!ExternalMergeSort.debug)
+                .withBufferSize(65536)
+                .build();
+        int size = 9123;
+        assertSorted(handler, sort, new RandomIntIterator(size), size, distinct);
+    }
+
     private void assertSorted(SortHandler<Integer> handler, ExternalMergeSort<Integer> sort, Iterator<Integer> input, int size, boolean distinct) throws IOException {
         long st = System.currentTimeMillis();
         int last = Integer.MIN_VALUE;
