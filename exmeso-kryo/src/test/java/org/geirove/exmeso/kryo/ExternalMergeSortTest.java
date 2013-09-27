@@ -18,7 +18,7 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
             }
         });
         performPrimeIntegerSort(handler, false);
-//        performLargeIntegerSort(handler, false);
+        performLargeIntegerSort(handler, false);
     }
 
 }

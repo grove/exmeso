@@ -42,7 +42,7 @@ public abstract class AbstractExternalMergeSortTest {
     public abstract void testLargeIntegerSort() throws IOException;
 
     protected void performLargeIntegerSort(SortHandler<Integer> handler, boolean distinct) throws IOException {
-        // ten million elements, 500k chunks, max 20 files
+        // ten million elements, 500k chunks, max 19 files
         ExternalMergeSort<Integer> sort = ExternalMergeSort.newSorter(handler)
                 .withChunkSize(500000)
                 .withMaxOpenFiles(19)

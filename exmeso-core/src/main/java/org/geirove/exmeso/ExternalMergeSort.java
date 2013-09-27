@@ -108,7 +108,17 @@ public class ExternalMergeSort<T> {
     }
 
     private MergeIterator<T> merge(List<File> sortedChunks) throws IOException {
-        return new MergeIterator<T>(sortedChunks, handler, config.cleanup, config.distinct, config.bufferSize);
+        if (debugMerge) {
+            System.out.println("Final chunks: " + sortedChunks.size());
+        }
+        if (sortedChunks.size() == 1) {
+            File sortedChunk = sortedChunks.get(0);
+            return new ChunkFile<T>(sortedChunk, handler, config.bufferSize);
+//            return new SingleFileMergeIterator<T>(sortedChunk, handler, config.cleanup, config.distinct, config.bufferSize);
+            
+        } else {
+            return new MultiFileMergeIterator<T>(sortedChunks, handler, config.cleanup, config.distinct, config.bufferSize);
+        }
     }
 
     private List<File> partialMerge(List<File> sortedChunks) throws IOException {
@@ -174,8 +184,65 @@ public class ExternalMergeSort<T> {
             iter.close();
         }
     }
+    
+    public static interface MergeIterator<T> extends Iterator<T>, Closeable {
+    }
 
-    public static class MergeIterator<T> implements Iterator<T>, Closeable {
+//    public static class SingleFileMergeIterator<T> implements MergeIterator<T> {
+//
+//        private final ChunkFile<T> cf;
+//
+//        private final boolean cleanup;
+//        private final boolean distinct;
+//
+//        private T next;
+//
+//        SingleFileMergeIterator(File file, SortHandler<T> handler, boolean cleanup, boolean distinct, int bufferSize) throws IOException {
+//            this.cf = new ChunkFile<T>(file, handler, bufferSize);
+//            this.cleanup = cleanup;
+//            this.distinct = distinct;
+//            readNext();
+//        }
+//        
+//        private void readNext() {
+//            T next_ = null;
+//            while (cf.hasNext()) {
+//                next_ = cf.next();
+//                if (!distinct || !next_.equals(next)) {
+//                    break;
+//                }
+//            };
+//            this.next = next_;
+//        }
+//        
+//        @Override
+//        public boolean hasNext() {
+//            return next != null;
+//        }
+//
+//        @Override
+//        public T next() {
+//            T result = next;
+//            readNext();
+//            return result;
+//        }
+//
+//        @Override
+//        public void remove() {
+//            throw new UnsupportedOperationException();
+//        }
+//
+//        @Override
+//        public void close() throws IOException {
+//            cf.close();
+//            if (cleanup) {
+//                cf.delete();
+//            }
+//        }
+//        
+//    }
+    
+    public static class MultiFileMergeIterator<T> implements MergeIterator<T> {
 
         private final PriorityQueue<ChunkFile<T>> pq;
         private final List<ChunkFile<T>> cfs;
@@ -185,7 +252,7 @@ public class ExternalMergeSort<T> {
 
         private T next;
 
-        MergeIterator(List<File> files, SortHandler<T> handler, boolean cleanup, boolean distinct, int bufferSize) throws IOException {
+        MultiFileMergeIterator(List<File> files, SortHandler<T> handler, boolean cleanup, boolean distinct, int bufferSize) throws IOException {
             this.cleanup = cleanup;
             this.distinct = distinct;
             List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(files.size());
@@ -211,8 +278,8 @@ public class ExternalMergeSort<T> {
                 if (distinct) {
                     do {
                         ChunkFile<T> cf = pq.poll();
-                        next_ = cf.pop();
-                        if (!cf.isEmpty()) {
+                        next_ = cf.next();
+                        if (cf.hasNext()) {
                             pq.add(cf);
                         }
                         if (!next_.equals(next)) {
@@ -221,8 +288,8 @@ public class ExternalMergeSort<T> {
                     } while (true);
                 } else {
                     ChunkFile<T> cf = pq.poll();
-                    next_ = cf.pop();
-                    if (!cf.isEmpty()) {
+                    next_ = cf.next();
+                    if (cf.hasNext()) {
                         pq.add(cf);
                     }
                 }
@@ -267,7 +334,7 @@ public class ExternalMergeSort<T> {
 
     }
 
-    private static class ChunkFile<T> implements Comparable<ChunkFile<T>>, Closeable {
+    private static class ChunkFile<T> implements Comparable<ChunkFile<T>>, MergeIterator<T> {
 
         private final File file;
         private final InputStream input;
@@ -293,14 +360,21 @@ public class ExternalMergeSort<T> {
             this.next = iter.hasNext() ? iter.next() : null;
         }
 
-        public boolean isEmpty() {
-            return next == null;
+        @Override
+        public boolean hasNext() {
+            return next != null;
         }
 
-        public T pop() {
+        @Override
+        public T next() {
             T result = next;
             readNext();
             return result;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -352,6 +426,9 @@ public class ExternalMergeSort<T> {
             List<T> chunk = readChunk(input);
             File chunkFile = writeSortedChunk(chunk);
             result.add(chunkFile);
+        }
+        if (debugMerge) {
+            System.out.printf("Chunks %d of each %d\n", result.size(), config.chunkSize);
         }
         return result;
     }
