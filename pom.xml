@@ -10,7 +10,7 @@
   <groupId>org.geirove.exmeso</groupId>
   <artifactId>exmeso</artifactId>
   <packaging>pom</packaging>
-  <version>0.0.1</version>
+  <version>0.0.2-SNAPSHOT</version>
 
   <name>Exmeso Parent - External Merge Sort</name>
   <description>External Merge Sort in Java - Parent module</description>
