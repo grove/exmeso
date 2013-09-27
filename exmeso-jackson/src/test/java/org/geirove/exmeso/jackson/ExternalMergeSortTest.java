@@ -97,33 +97,45 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
         }
     }
 
-    protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
-        JacksonSort<StringPojo> handler = new JacksonSort<StringPojo>(StringPojo.class, new Comparator<StringPojo>() {
-            @Override
-            public int compare(StringPojo o1, StringPojo o2) {
-                return o1.getValue().compareTo(o2.getValue());
-            }
-        });
+    private static final JacksonSort<StringPojo> stringPojoHandler = new JacksonSort<StringPojo>(StringPojo.class, new Comparator<StringPojo>() {
+        @Override
+        public int compare(StringPojo o1, StringPojo o2) {
+            return o1.getValue().compareTo(o2.getValue());
+        }
+    });
 
-        return ExternalMergeSort.newSorter(handler)
+    protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
+
+        return ExternalMergeSort.newSorter(stringPojoHandler)
                 .withChunkSize(3)
                 .withMaxOpenFiles(2)
                 .withDistinct(distinct)
                 .withCleanup(!ExternalMergeSort.debug)
                 .build();
     }
+    
+    private final static JacksonSort<Integer> integerHandler = new JacksonSort<Integer>(Integer.class, new Comparator<Integer>() {
+        @Override
+        public int compare(Integer o1, Integer o2) {
+            return o1.compareTo(o2);
+        }
+    });
 
     @Test
     @Override
     public void testLargeIntegerSort() throws IOException {
-        JacksonSort<Integer> handler = new JacksonSort<Integer>(Integer.class, new Comparator<Integer>() {
-            @Override
-            public int compare(Integer o1, Integer o2) {
-                return o1.compareTo(o2);
-            }
-        });
-        performPrimeIntegerSort(handler, false);
-        performLargeIntegerSort(handler, false);
+        performPrimeIntegerSort(integerHandler, false);
+        performLargeIntegerSort(integerHandler, false);
+    }
+    
+    @Test
+    public void testPrimeIntegerSort() throws IOException {
+        performPrimeIntegerSort(integerHandler, false);
+    }
+
+    @Test
+    public void testMultiMergeIntegerSort() throws IOException {
+        performMultiMergeIntegerSort(integerHandler, false);
     }
 
 }
