@@ -114,8 +114,6 @@ public class ExternalMergeSort<T> {
         if (sortedChunks.size() == 1) {
             File sortedChunk = sortedChunks.get(0);
             return new ChunkFile<T>(sortedChunk, handler, config.bufferSize);
-//            return new SingleFileMergeIterator<T>(sortedChunk, handler, config.cleanup, config.distinct, config.bufferSize);
-            
         } else {
             return new MultiFileMergeIterator<T>(sortedChunks, handler, config.cleanup, config.distinct, config.bufferSize);
         }
@@ -187,62 +185,8 @@ public class ExternalMergeSort<T> {
     
     public static interface MergeIterator<T> extends Iterator<T>, Closeable {
     }
-
-//    public static class SingleFileMergeIterator<T> implements MergeIterator<T> {
-//
-//        private final ChunkFile<T> cf;
-//
-//        private final boolean cleanup;
-//        private final boolean distinct;
-//
-//        private T next;
-//
-//        SingleFileMergeIterator(File file, SortHandler<T> handler, boolean cleanup, boolean distinct, int bufferSize) throws IOException {
-//            this.cf = new ChunkFile<T>(file, handler, bufferSize);
-//            this.cleanup = cleanup;
-//            this.distinct = distinct;
-//            readNext();
-//        }
-//        
-//        private void readNext() {
-//            T next_ = null;
-//            while (cf.hasNext()) {
-//                next_ = cf.next();
-//                if (!distinct || !next_.equals(next)) {
-//                    break;
-//                }
-//            };
-//            this.next = next_;
-//        }
-//        
-//        @Override
-//        public boolean hasNext() {
-//            return next != null;
-//        }
-//
-//        @Override
-//        public T next() {
-//            T result = next;
-//            readNext();
-//            return result;
-//        }
-//
-//        @Override
-//        public void remove() {
-//            throw new UnsupportedOperationException();
-//        }
-//
-//        @Override
-//        public void close() throws IOException {
-//            cf.close();
-//            if (cleanup) {
-//                cf.delete();
-//            }
-//        }
-//        
-//    }
     
-    public static class MultiFileMergeIterator<T> implements MergeIterator<T> {
+    private static class MultiFileMergeIterator<T> implements MergeIterator<T> {
 
         private final PriorityQueue<ChunkFile<T>> pq;
         private final List<ChunkFile<T>> cfs;
