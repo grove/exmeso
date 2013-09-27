@@ -60,9 +60,19 @@ public abstract class AbstractExternalMergeSortTest {
                 .withMaxOpenFiles(7)
                 .withDistinct(distinct)
                 .withCleanup(!ExternalMergeSort.debug)
-                .withBufferSize(65536)
                 .build();
         int size = 9123;
+        assertSorted(handler, sort, new RandomIntIterator(size), size, distinct);
+    }
+
+    protected void performMultiMergeIntegerSort(SortHandler<Integer> handler, boolean distinct) throws IOException {
+        ExternalMergeSort<Integer> sort = ExternalMergeSort.newSorter(handler)
+                .withChunkSize(3)
+                .withMaxOpenFiles(5)
+                .withDistinct(distinct)
+                .withCleanup(!ExternalMergeSort.debug)
+                .build();
+        int size = 37;
         assertSorted(handler, sort, new RandomIntIterator(size), size, distinct);
     }
 
