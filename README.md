@@ -13,3 +13,14 @@ Persistence is handled by an implementation of the SortHandler&lt;T&gt; interfac
 The sorting algorithm is implemented by [ExternalMergeSort&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-core/src/main/java/org/geirove/exmeso/ExternalMergeSort.java).
 
 See the [ExternalMergeSortTest](https://github.com/grove/exmeso/blob/master/exmeso-jackson/src/test/java/org/geirove/exmeso/jackson/ExternalMergeSortTest.java) class for code examples.
+
+Add the following dependency to your own project:
+
+    <dependency>
+      <groupId>org.geirove</groupId>
+        <artifactId>exmeso-jackson</artifactId>
+        <version>0.0.1</version>
+      </dependency>
+
+The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release.
+
