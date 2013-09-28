@@ -4,13 +4,13 @@
   <parent>
     <groupId>org.geirove.exmeso</groupId>
     <artifactId>exmeso</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.2</version>
   </parent>
 
   <groupId>org.geirove.exmeso</groupId>
   <artifactId>exmeso-jackson</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.0.2</version>
 
   <name>Exmeso Jackson - External Merge Sort</name>
   <description>External Merge Sort in Java - Jackson module</description>
