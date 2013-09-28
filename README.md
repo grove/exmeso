@@ -17,10 +17,10 @@ See the [ExternalMergeSortTest](https://github.com/grove/exmeso/blob/master/exme
 Add the following dependency to your own project:
 
     <dependency>
-      <groupId>org.geirove</groupId>
-        <artifactId>exmeso-jackson</artifactId>
-        <version>0.0.1</version>
-      </dependency>
+      <groupId>org.geirove.exmeso</groupId>
+      <artifactId>exmeso-jackson</artifactId>
+      <version>0.0.1</version>
+    </dependency>
 
 The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release.
 
