@@ -12,25 +12,27 @@ Persistence is handled by an implementation of the SortHandler&lt;T&gt; interfac
 
 The sorting algorithm is implemented by [ExternalMergeSort&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-core/src/main/java/org/geirove/exmeso/ExternalMergeSort.java).
 
+### Maven dependency
+
 Add the following dependency to your own project:
 
     <dependency>
       <groupId>org.geirove.exmeso</groupId>
       <artifactId>exmeso-jackson</artifactId>
-      <version>0.0.1</version>
+      <version>0.0.2</version>
     </dependency>
 
-The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release.
+The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release. Modules released to Maven Central cannot reference SNAPSHOT dependencies. For now you'll have to build the module locally if you would like to test it.
 
 ### Example code
 
 Here is code example that reads unsorted input from <code>input.json</code> and writes the sorted output to <code>output.json</code>. The input is an array of JSON objects that gets sorted by their <code>"id"</code> field.
 
-    // prepare input and output files
+    // Prepare input and output files
     File inputFile = new File("/tmp/input.json");
     File outputFile = new File("/tmp/output.json");
     
-    // create a sort handler
+    // Create a sort handler
     JacksonSort<ObjectNode> handler = new JacksonSort<ObjectNode>(ObjectNode.class, new Comparator<ObjectNode>() {
         @Override
         public int compare(ObjectNode o1, ObjectNode o2) {
@@ -40,19 +42,27 @@ Here is code example that reads unsorted input from <code>input.json</code> and 
         }
     });
 
-    // create the external merge sort utility
+    // Create the external merge sort utility
     ExternalMergeSort<ObjectNode> sort = ExternalMergeSort.newSorter(handler)
             .withChunkSize(1000)
             .withMaxOpenFiles(10)
-            .withDistinct(false)
+            .withDistinct(true)
             .withCleanup(true)
             .withTempDirectory(new File("/tmp"))
             .build();
    
-    // read input as an input stream an let the sort handler do the
-    // deserialization of the input and the serialization of the output
+    // Read input file as an input stream and write sorted chunks. Note that the
+    // sorted chunks will be deleted when the MergeIterator is closed.
+    List<File> sortedChunks;
     InputStream input = new FileInputStream(inputFile);
-    MergeIterator<ObjectNode> iter = sort.mergeSort(input);
+    try {
+       sortedChunks = sort.writeSortedChunks(input);
+    } finally {
+        input.close();
+    }
+    
+    // Get a merge iterator over the sorted chunks
+    MergeIterator<ObjectNode> iter = sort.mergeSortedChunks(sortedChunks);
     try {
         OutputStream out = new FileOutputStream(outputFile);
         try {

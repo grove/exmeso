@@ -48,7 +48,6 @@ public abstract class AbstractExternalMergeSortTest {
                 .withMaxOpenFiles(19)
                 .withDistinct(distinct)
                 .withCleanup(!ExternalMergeSort.debug)
-                .withBufferSize(65536)
                 .build();
         int size = 10000000;
         assertSorted(handler, sort, new RandomIntIterator(size), size, distinct);

@@ -1,7 +1,5 @@
 package org.geirove.exmeso;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,6 +13,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
+/**
+ * An implementation of External Merge Sort. This class has a fluent API for building an 
+ * instance. The created instance has several methods for doing external merge sort in 
+ * one or two steps depending on which method is most appropriate for the situation. 
+ * 
+ * @author grove@geirove.org
+ *
+ * @param <T> The type of values to sort.
+ */
 public class ExternalMergeSort<T> {
 
     public static boolean debug = false;
@@ -28,6 +35,11 @@ public class ExternalMergeSort<T> {
         this.handler = config.handler;
     }
     
+    /**
+     * Fluent API building a new instance of ExternalMergeSort<T.
+     * @param handler SortHandler<T> to use when sorting.
+     * @return Config instance that can be used to set options and in the end create a new instance.
+     */
     public static <T> Config<T> newSorter(SortHandler<T> handler) {
         return new Config<T>(handler);
     }
@@ -38,44 +50,73 @@ public class ExternalMergeSort<T> {
         private File tempDirectory;
         private int maxOpenFiles = 25;
         private int chunkSize = 1000;
-        private int bufferSize = 8192;
         private boolean cleanup = true;
-        private boolean distinct = false;
+        private boolean distinct = true;
         
         private Config(SortHandler<T> handler) {
             this.handler = handler;
         }
         
+        /**
+         * Specifies which directory to use when storing temporary files. The 
+         * default is System.getProperty("java.io.tmpdir").
+         * @param tempDirectory The temporary directory.
+         * @return this
+         */
         public Config<T> withTempDirectory(File tempDirectory) {
             this.tempDirectory = tempDirectory;
             return this;
         }
-        
+
+        /**
+         * Specifies the maximum number of open files that can be used 
+         * to read and write files. The default is 25. 
+         * @param maxOpenFiles The maximum number of open files.
+         * @return this
+         */
         public Config<T> withMaxOpenFiles(int maxOpenFiles) {
             this.maxOpenFiles = maxOpenFiles;
             return this;
         }
         
+        /**
+         * Specifies the maxiumum number of objects in each chunk files. It 
+         * is also the number of objects to sort in memory at one time.
+         * @param chunkSize The maximum number of objects in a chunk file. The
+         * default is 1000.
+         * @return this
+         */
         public Config<T> withChunkSize(int chunkSize) {
             this.chunkSize = chunkSize;
             return this;
         }
         
-        public Config<T> withBufferSize(int bufferSize) {
-            this.bufferSize = bufferSize;
-            return this;
-        }
-        
+        /**
+         * Specifies whether to remove duplicate values. The default is true.
+         * @param distinct If true then remove duplicate values.
+         * @return this
+         */
         public Config<T> withDistinct(boolean distinct) {
             this.distinct = distinct;
             return this;
         }
         
+        /**
+         * Specifies whether to remove temporary files when 
+         * MergeIterator.close() is called. The default is true.
+         * @param cleanup If true then remove temporary files
+         * @return this
+         */
         public Config<T> withCleanup(boolean cleanup) {
             this.cleanup = cleanup;
             return this;
         }
         
+        /**
+         * Create an instance of ExternalMergeSort with the 
+         * given configuration options.
+         * @return An instance of ExternalMergeSort<T>.
+         */
         public ExternalMergeSort<T> build() {
             if (tempDirectory == null) {
                 String tmpdir = System.getProperty("java.io.tmpdir");
@@ -85,6 +126,13 @@ public class ExternalMergeSort<T> {
         }
     }
     
+    /**
+     * An interface implemented by handlers that serialize and deserialize 
+     * objects to be sorted. It is also responsible for doing the actual 
+     * sorting of objects.
+     *
+     * @param <T> The type of objects to be sorted.
+     */
     public static interface SortHandler<T> extends Closeable {
 
         void sortValues(List<T> values);
@@ -97,25 +145,55 @@ public class ExternalMergeSort<T> {
         
     }
 
+    /**
+     * Performs an external merge on the values in the iterator.
+     * @param values Iterator containing the data to sort.
+     * @return an iterator the iterates over the sorted result.
+     * @throws IOException if something fails when doing I/O.
+     */
     public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
-        List<File> sortedChunks = partialMerge(writeSortedChunks(values));
-        return merge(sortedChunks);
+        List<File> sortedChunks = writeSortedChunks(values);
+        return mergeSortedChunks(sortedChunks);
     }
 
+    /**
+     * Performs an external merge on the input stream. Note that the input stream will be closed 
+     * explicitly after all sorted chunks have been written. If that does not work for you, then 
+     * use the writeSortedChunks(InputStream) and mergeSortedChunks(List<File>) methods instead.
+     * @param input InputStream containing the data to sort.
+     * @return an iterator the iterates over the sorted result.
+     * @throws IOException if something fails when doing I/O.
+     */
     public MergeIterator<T> mergeSort(InputStream input) throws IOException {
-        List<File> sortedChunks = partialMerge(writeSortedChunks(input));
-        return merge(sortedChunks);
+        List<File> sortedChunks;
+        try {
+            sortedChunks = writeSortedChunks(input);
+        } finally {
+            input.close();
+        }
+        return mergeSortedChunks(sortedChunks);
     }
-
-    private MergeIterator<T> merge(List<File> sortedChunks) throws IOException {
+    
+    /**
+     * Returns an iterator over the sorted result. Takes a list of already sorted chunk files as 
+     * input. Note that this method is normally used with one of the writeSortedChunks methods.
+     * @param sortedChunks a list of sorted chunk files
+     * @return an iterator the iterates over the sorted result.
+     * @throws IOException if something fails when doing I/O.
+     */
+    public MergeIterator<T> mergeSortedChunks(List<File> sortedChunks) throws IOException {
+        return mergeSortedChunksNoPartialMerge(partialMerge(sortedChunks));
+    }
+    
+    private MergeIterator<T> mergeSortedChunksNoPartialMerge(List<File> sortedChunks) throws IOException {
         if (debugMerge) {
             System.out.println("Merging chunks: " + sortedChunks.size());
         }
         if (sortedChunks.size() == 1) {
             File sortedChunk = sortedChunks.get(0);
-            return new ChunkFile<T>(sortedChunk, handler, config.bufferSize);
+            return new ChunkFile<T>(sortedChunk, handler);
         } else {
-            return new MultiFileMergeIterator<T>(sortedChunks, handler, config.cleanup, config.distinct, config.bufferSize);
+            return new MultiFileMergeIterator<T>(sortedChunks, handler, config.cleanup, config.distinct);
         }
     }
 
@@ -165,7 +243,7 @@ public class ExternalMergeSort<T> {
     }
 
     private File mergeSubList(List<File> subList) throws IOException {
-        MergeIterator<T> iter = merge(subList);
+        MergeIterator<T> iter = mergeSortedChunksNoPartialMerge(subList);
         try {
             return writeChunk("exmeso-merged-", iter);
         } finally {
@@ -186,12 +264,12 @@ public class ExternalMergeSort<T> {
 
         private T next;
 
-        MultiFileMergeIterator(List<File> files, SortHandler<T> handler, boolean cleanup, boolean distinct, int bufferSize) throws IOException {
+        MultiFileMergeIterator(List<File> files, SortHandler<T> handler, boolean cleanup, boolean distinct) throws IOException {
             this.cleanup = cleanup;
             this.distinct = distinct;
             List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(files.size());
             for  (File file : files) {
-                cfs.add(new ChunkFile<T>(file, handler, bufferSize));
+                cfs.add(new ChunkFile<T>(file, handler));
             }
             this.cfs = cfs;
             this.pq = new PriorityQueue<ChunkFile<T>>(cfs.size(), new Comparator<ChunkFile<T>>() {
@@ -277,10 +355,10 @@ public class ExternalMergeSort<T> {
         private Iterator<T> iter;
         private T next;
 
-        private ChunkFile(final File file, SortHandler<T> handler, int bufferSize) throws IOException {
+        private ChunkFile(final File file, SortHandler<T> handler) throws IOException {
             this.file = file;
             this.handler = handler;
-            input = new BufferedInputStream(new FileInputStream(file), bufferSize);
+            input = new FileInputStream(file);
             iter = handler.readValues(input);
             readNext();
         }
@@ -335,7 +413,14 @@ public class ExternalMergeSort<T> {
         return result;
     }
 
-    private List<File> writeSortedChunks(InputStream input) throws IOException {
+    /**
+     * Reads the data from the input stream and writes sorted chunk files to disk. Note that 
+     * the InputStream is *not* being closed explicitly.
+     * @param input InputStream containing the data to sort.
+     * @return list of sorted chunk files. 
+     * @throws IOException if something fails when doing I/O.
+     */
+    public List<File> writeSortedChunks(InputStream input) throws IOException {
         List<File> result = new ArrayList<File>();
         Iterator<T> iter = handler.readValues(input);
         List<T> chunk = new ArrayList<T>(Math.max(2, config.chunkSize/4));
@@ -354,7 +439,13 @@ public class ExternalMergeSort<T> {
         return result;
     }
 
-    private List<File> writeSortedChunks(Iterator<T> input) throws IOException {
+    /**
+     * Reads the data from the iterator and writes sorted chunk files to disk.
+     * @param input Iterator containing the data to sort.
+     * @return list of sorted chunk files. 
+     * @throws IOException if something fails when doing I/O.
+     */
+    public List<File> writeSortedChunks(Iterator<T> input) throws IOException {
         List<File> result = new ArrayList<File>();
         while (input.hasNext()) {
             List<T> chunk = readChunk(input);
@@ -374,7 +465,7 @@ public class ExternalMergeSort<T> {
 
     private File writeChunk(String prefix, Iterator<T> values) throws IOException {
         File chunkFile = createChunkFile(prefix);
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(chunkFile), config.bufferSize);
+        OutputStream out = new FileOutputStream(chunkFile);
         try {
             handler.writeValues(values, out);
         } finally {
