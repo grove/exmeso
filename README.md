@@ -26,7 +26,7 @@ The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.2
 
 ### Example code
 
-Here is code example that reads unsorted input from <code>input.json</code> and writes the sorted output to <code>output.json</code>. The input is an array of JSON objects that gets sorted by their <code>"id"</code> field.
+This code example reads unsorted input from <code>input.json</code> and writes the sorted output to <code>output.json</code>. The JSON input is an array of JSON objects that gets sorted by their <code>"id"</code> field.
 
     // Prepare input and output files
     File inputFile = new File("/tmp/input.json");
