@@ -51,8 +51,7 @@ This code example reads unsorted input from <code>input.json</code> and writes t
             .withTempDirectory(new File("/tmp"))
             .build();
    
-    // Read input file as an input stream and write sorted chunks. Note that the
-    // sorted chunks will be deleted when the MergeIterator is closed.
+    // Read input file as an input stream and write sorted chunks.
     List<File> sortedChunks;
     InputStream input = new FileInputStream(inputFile);
     try {
@@ -61,17 +60,19 @@ This code example reads unsorted input from <code>input.json</code> and writes t
         input.close();
     }
     
-    // Get a merge iterator over the sorted chunks
-    MergeIterator<ObjectNode> iter = sort.mergeSortedChunks(sortedChunks);
+    // Get a merge iterator over the sorted chunks. This will return the
+    // objects in sorted order. Note that the sorted chunks will be deleted 
+    // when the MergeIterator is closed because 'cleanup' is set to true.
+    MergeIterator<ObjectNode> sorted = sort.mergeSortedChunks(sortedChunks);
     try {
-        OutputStream out = new FileOutputStream(outputFile);
+        OutputStream output = new FileOutputStream(outputFile);
         try {
-            handler.writeValues(iter, out);
+            handler.writeValues(sorted, output);
         } finally {
-            out.close();
+            output.close();
         }
     } finally {
-        iter.close();
+        sorted.close();
     }
 
 
