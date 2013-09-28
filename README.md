@@ -3,7 +3,9 @@ External Merge Sort
 
 This is a small library that implements [External Merge Sort](http://en.wikipedia.org/wiki/External_sorting) in Java. 
 
-It is pretty flexible as it takes either an InputStream or an Iterable&lt;T&gt; as input and returns the sorted result as MergeIterator&lt;T&gt;. Sort order is given by an instance of Comparator&lt;T&gt;.
+It is pretty flexible as it takes either an InputStream or an Iterable&lt;T&gt; as input and returns the sorted result as MergeIterator&lt;T&gt;. 
+
+Sort order is given by an instance of Comparator&lt;T&gt;.
 
 Persistence is handled by an implementation of the Serializer&lt;T&gt; interface, of which there are currently two implementations:
 
