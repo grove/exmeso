@@ -98,7 +98,7 @@
   <modules>
     <module>exmeso-core</module>
     <module>exmeso-jackson</module>
-    <module>exmeso-kryo</module>
+    <!--module>exmeso-kryo</module-->
   </modules>
   
 </project>
