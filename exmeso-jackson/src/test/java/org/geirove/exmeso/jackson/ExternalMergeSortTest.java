@@ -97,16 +97,17 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
         }
     }
 
-    private static final JacksonSort<StringPojo> stringPojoHandler = new JacksonSort<StringPojo>(StringPojo.class, new Comparator<StringPojo>() {
+    private static final Comparator<StringPojo> stringPojoComparator = new Comparator<StringPojo>() {
         @Override
         public int compare(StringPojo o1, StringPojo o2) {
             return o1.getValue().compareTo(o2.getValue());
         }
-    });
+    };
+    private static final JacksonSerializer<StringPojo> stringPojoSerializer = new JacksonSerializer<StringPojo>(StringPojo.class);
 
     protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
 
-        return ExternalMergeSort.newSorter(stringPojoHandler)
+        return ExternalMergeSort.newSorter(stringPojoSerializer, stringPojoComparator)
                 .withChunkSize(3)
                 .withMaxOpenFiles(2)
                 .withDistinct(distinct)
@@ -114,28 +115,30 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
                 .build();
     }
     
-    private final static JacksonSort<Integer> integerHandler = new JacksonSort<Integer>(Integer.class, new Comparator<Integer>() {
+    private final static Comparator<Integer> integerComparator = new Comparator<Integer>() {
         @Override
         public int compare(Integer o1, Integer o2) {
             return o1.compareTo(o2);
         }
-    });
+    };
+    
+    private final static JacksonSerializer<Integer> integerSerializer = new JacksonSerializer<Integer>(Integer.class);
 
     @Test
     @Override
     public void testLargeIntegerSort() throws IOException {
-        performPrimeIntegerSort(integerHandler, false);
-        performLargeIntegerSort(integerHandler, false);
+        performPrimeIntegerSort(integerSerializer, integerComparator, false);
+        performLargeIntegerSort(integerSerializer, integerComparator, false);
     }
     
     @Test
     public void testPrimeIntegerSort() throws IOException {
-        performPrimeIntegerSort(integerHandler, false);
+        performPrimeIntegerSort(integerSerializer, integerComparator, false);
     }
 
     @Test
     public void testMultiMergeIntegerSort() throws IOException {
-        performMultiMergeIntegerSort(integerHandler, false);
+        performMultiMergeIntegerSort(integerSerializer, integerComparator, false);
     }
 
 }

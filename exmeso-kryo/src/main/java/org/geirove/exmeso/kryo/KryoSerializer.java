@@ -3,10 +3,7 @@ package org.geirove.exmeso.kryo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 
 import org.geirove.exmeso.ExternalMergeSort;
 
@@ -14,34 +11,18 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-public class KryoSort<T> implements ExternalMergeSort.SortHandler<T> {
+public class KryoSerializer<T> implements ExternalMergeSort.Serializer<T> {
 
     private final Class<T> type;
-    private final Comparator<T> comparator;
     private final Kryo kryo;
 
-    public KryoSort(Class<T> type, Comparator<T> comparator) {
-        this(type, comparator, new Kryo());    
+    public KryoSerializer(Class<T> type) {
+        this(type, new Kryo());    
     }
 
-    public KryoSort(Class<T> type, Comparator<T> comparator, Kryo kryo) {
+    public KryoSerializer(Class<T> type, Kryo kryo) {
         this.type = type;
-        this.comparator = comparator;
         this.kryo = new Kryo();    
-    }
-    
-    @Override
-    public void sortValues(List<T> values) {
-        long st = System.currentTimeMillis();
-        Collections.sort(values, comparator);
-        if (ExternalMergeSort.debug) {
-            System.out.println("S: " + (System.currentTimeMillis() - st) + "ms");
-        }
-    }
-
-    @Override
-    public int compareValues(T o1, T o2) {
-        return comparator.compare(o1, o2);
     }
 
     @Override

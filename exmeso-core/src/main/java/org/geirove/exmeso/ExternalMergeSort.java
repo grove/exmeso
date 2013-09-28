@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -27,34 +28,39 @@ public class ExternalMergeSort<T> {
     public static boolean debug = false;
     public static boolean debugMerge = false;
     
-    private final SortHandler<T> handler;
     private final Config<T> config;
+    private final Serializer<T> serializer;
+    private final Comparator<T> comparator;
 
     private ExternalMergeSort(Config<T> config) {
         this.config = config;
-        this.handler = config.handler;
+        this.serializer = config.serializer;
+        this.comparator = config.comparator;
     }
     
     /**
      * Fluent API building a new instance of ExternalMergeSort<T.
-     * @param handler SortHandler<T> to use when sorting.
+     * @param serializer Serializer<T> to use when sorting.
      * @return Config instance that can be used to set options and in the end create a new instance.
      */
-    public static <T> Config<T> newSorter(SortHandler<T> handler) {
-        return new Config<T>(handler);
+    public static <T> Config<T> newSorter(Serializer<T> serializer, Comparator<T> comparator) {
+        return new Config<T>(serializer, comparator);
     }
 
     public static class Config<T> {
         
-        private final SortHandler<T> handler;
+        private final Serializer<T> serializer;
+        private final Comparator<T> comparator;
+
         private File tempDirectory;
         private int maxOpenFiles = 25;
         private int chunkSize = 1000;
         private boolean cleanup = true;
         private boolean distinct = true;
         
-        private Config(SortHandler<T> handler) {
-            this.handler = handler;
+        private Config(Serializer<T> serializer, Comparator<T> comparator) {
+            this.serializer = serializer;
+            this.comparator = comparator;
         }
         
         /**
@@ -127,17 +133,13 @@ public class ExternalMergeSort<T> {
     }
     
     /**
-     * An interface implemented by handlers that serialize and deserialize 
+     * An interface implemented by serializers that serialize and deserialize 
      * objects to be sorted. It is also responsible for doing the actual 
      * sorting of objects.
      *
      * @param <T> The type of objects to be sorted.
      */
-    public static interface SortHandler<T> extends Closeable {
-
-        void sortValues(List<T> values);
-
-        int compareValues(T o1, T o2);
+    public static interface Serializer<T> extends Closeable {
 
         void writeValues(Iterator<T> values, OutputStream out) throws IOException;
 
@@ -191,9 +193,9 @@ public class ExternalMergeSort<T> {
         }
         if (sortedChunks.size() == 1) {
             File sortedChunk = sortedChunks.get(0);
-            return new ChunkFile<T>(sortedChunk, handler);
+            return new ChunkFile<T>(sortedChunk, serializer, comparator);
         } else {
-            return new MultiFileMergeIterator<T>(sortedChunks, handler, config.cleanup, config.distinct);
+            return new MultiFileMergeIterator<T>(sortedChunks, serializer, comparator, config.cleanup, config.distinct);
         }
     }
 
@@ -264,12 +266,12 @@ public class ExternalMergeSort<T> {
 
         private T next;
 
-        MultiFileMergeIterator(List<File> files, SortHandler<T> handler, boolean cleanup, boolean distinct) throws IOException {
+        MultiFileMergeIterator(List<File> files, Serializer<T> serializer, Comparator<T> comparator, boolean cleanup, boolean distinct) throws IOException {
             this.cleanup = cleanup;
             this.distinct = distinct;
             List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(files.size());
             for  (File file : files) {
-                cfs.add(new ChunkFile<T>(file, handler));
+                cfs.add(new ChunkFile<T>(file, serializer, comparator));
             }
             this.cfs = cfs;
             this.pq = new PriorityQueue<ChunkFile<T>>(cfs.size(), new Comparator<ChunkFile<T>>() {
@@ -349,17 +351,17 @@ public class ExternalMergeSort<T> {
     private static class ChunkFile<T> implements Comparable<ChunkFile<T>>, MergeIterator<T> {
 
         private final File file;
-        private final InputStream input;
-        private final SortHandler<T> handler;
+        private final Comparator<T> comparator;
 
+        private final InputStream input;
         private Iterator<T> iter;
         private T next;
 
-        private ChunkFile(final File file, SortHandler<T> handler) throws IOException {
+        private ChunkFile(final File file, Serializer<T> serializer, Comparator<T> comparator) throws IOException {
             this.file = file;
-            this.handler = handler;
+            this.comparator = comparator;
             input = new FileInputStream(file);
-            iter = handler.readValues(input);
+            iter = serializer.readValues(input);
             readNext();
         }
 
@@ -391,7 +393,7 @@ public class ExternalMergeSort<T> {
 
         @Override
         public int compareTo(ChunkFile<T> o) {
-            return handler.compareValues(next, o.next);
+            return comparator.compare(next, o.next);
         }
 
         @Override
@@ -422,7 +424,7 @@ public class ExternalMergeSort<T> {
      */
     public List<File> writeSortedChunks(InputStream input) throws IOException {
         List<File> result = new ArrayList<File>();
-        Iterator<T> iter = handler.readValues(input);
+        Iterator<T> iter = serializer.readValues(input);
         List<T> chunk = new ArrayList<T>(Math.max(2, config.chunkSize/4));
         while (iter.hasNext()) {
             chunk.add(iter.next());
@@ -459,7 +461,11 @@ public class ExternalMergeSort<T> {
     }
 
     private File writeSortedChunk(List<T> values) throws IOException {
-        handler.sortValues(values);
+        long st = System.currentTimeMillis();
+        Collections.sort(values, comparator);
+        if (ExternalMergeSort.debug) {
+            System.out.println("S: " + (System.currentTimeMillis() - st) + "ms");
+        }
         return writeChunk("exmeso-sorted-", values.iterator());
     }
 
@@ -467,7 +473,7 @@ public class ExternalMergeSort<T> {
         File chunkFile = createChunkFile(prefix);
         OutputStream out = new FileOutputStream(chunkFile);
         try {
-            handler.writeValues(values, out);
+            serializer.writeValues(values, out);
         } finally {
             out.close();
         }

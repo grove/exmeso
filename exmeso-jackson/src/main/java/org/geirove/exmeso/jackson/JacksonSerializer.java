@@ -3,10 +3,7 @@ package org.geirove.exmeso.jackson;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -14,7 +11,7 @@ import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.geirove.exmeso.ExternalMergeSort;
 
-public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
+public class JacksonSerializer<T> implements ExternalMergeSort.Serializer<T> {
 
     private static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper() {{
         configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false);
@@ -22,31 +19,15 @@ public class JacksonSort<T> implements ExternalMergeSort.SortHandler<T> {
     }};
 
     private final Class<T> type;
-    private final Comparator<T> comparator;
     private final ObjectMapper mapper;
 
-    public JacksonSort(Class<T> type, Comparator<T> comparator) {
-        this(type, comparator, DEFAULT_MAPPER);
+    public JacksonSerializer(Class<T> type) {
+        this(type, DEFAULT_MAPPER);
     }
 
-    public JacksonSort(Class<T> type, Comparator<T> comparator, ObjectMapper mapper) {
+    public JacksonSerializer(Class<T> type, ObjectMapper mapper) {
         this.type = type;
-        this.comparator = comparator;
         this.mapper = mapper;
-    }
-    
-    @Override
-    public void sortValues(List<T> values) {
-        long st = System.currentTimeMillis();
-        Collections.sort(values, comparator);
-        if (ExternalMergeSort.debug) {
-            System.out.println("S: " + (System.currentTimeMillis() - st) + "ms");
-        }
-    }
-
-    @Override
-    public int compareValues(T o1, T o2) {
-        return comparator.compare(o1, o2);
     }
 
     @Override
