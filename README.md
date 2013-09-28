@@ -14,18 +14,6 @@ Persistence is handled by an implementation of the Serializer&lt;T&gt; interface
 
 The sorting algorithm is implemented by [ExternalMergeSort&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-core/src/main/java/org/geirove/exmeso/ExternalMergeSort.java).
 
-### Maven dependency
-
-Add the following dependency to your own project:
-
-    <dependency>
-      <groupId>org.geirove.exmeso</groupId>
-      <artifactId>exmeso-jackson</artifactId>
-      <version>0.0.3</version>
-    </dependency>
-
-The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release. Modules released to Maven Central cannot reference SNAPSHOT dependencies. For now you'll have to build the module locally if you would like to test it.
-
 ### Example code
 
 This code example reads unsorted input from <code>input.json</code> and writes the sorted output to <code>output.json</code>. The JSON input is an array of JSON objects that gets sorted by their <code>"id"</code> field.
@@ -82,4 +70,20 @@ This code example reads unsorted input from <code>input.json</code> and writes t
 
 
 See also the [ExternalMergeSortTest](https://github.com/grove/exmeso/blob/master/exmeso-jackson/src/test/java/org/geirove/exmeso/jackson/ExternalMergeSortTest.java) class for more code examples.
+
+### Maven dependencies
+
+#### exmeso-jackson
+
+The <code>exmeso-jackson</code> module can be added to your own project like this:
+
+    <dependency>
+      <groupId>org.geirove.exmeso</groupId>
+      <artifactId>exmeso-jackson</artifactId>
+      <version>0.0.3</version>
+    </dependency>
+
+#### exmeso-kryo
+
+The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release. Modules released to Maven Central cannot reference SNAPSHOT dependencies. For now you'll have to build the module locally if you would like to test it.
 
