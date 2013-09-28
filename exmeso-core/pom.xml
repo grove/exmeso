@@ -4,13 +4,13 @@
   <parent>
     <groupId>org.geirove.exmeso</groupId>
     <artifactId>exmeso</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3-SNAPSHOT</version>
   </parent>
 
   <groupId>org.geirove.exmeso</groupId>
   <artifactId>exmeso-core</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.2</version>
+  <version>0.0.3-SNAPSHOT</version>
 
   <name>Exmeso Core - External Merge Sort</name>
   <description>External Merge Sort in Java</description>
