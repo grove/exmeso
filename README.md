@@ -85,5 +85,5 @@ The <code>exmeso-jackson</code> module can be added to your own project like thi
 
 #### exmeso-kryo
 
-The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release. Modules released to Maven Central cannot reference SNAPSHOT dependencies. For now you'll have to build the module locally if you would like to test it.
+The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release. Modules released to Maven Central cannot reference SNAPSHOT dependencies. For now you'll have to build the module locally if you would like to try it.
 
