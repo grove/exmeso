@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.Queue;
 
 /**
  * An implementation of External Merge Sort. This class has a fluent API for building an 
@@ -258,7 +259,7 @@ public class ExternalMergeSort<T> {
     
     private static class MultiFileMergeIterator<T> implements MergeIterator<T> {
 
-        private final PriorityQueue<ChunkFile<T>> pq;
+        private final Queue<ChunkFile<T>> pq;
         private final List<ChunkFile<T>> cfs;
 
         private final boolean cleanup;
@@ -266,7 +267,7 @@ public class ExternalMergeSort<T> {
 
         private T next;
 
-        MultiFileMergeIterator(List<File> files, Serializer<T> serializer, Comparator<T> comparator, boolean cleanup, boolean distinct) throws IOException {
+        private MultiFileMergeIterator(List<File> files, Serializer<T> serializer, Comparator<T> comparator, boolean cleanup, boolean distinct) throws IOException {
             this.cleanup = cleanup;
             this.distinct = distinct;
             List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(files.size());
@@ -274,7 +275,8 @@ public class ExternalMergeSort<T> {
                 cfs.add(new ChunkFile<T>(file, serializer, comparator));
             }
             this.cfs = cfs;
-            this.pq = new PriorityQueue<ChunkFile<T>>(cfs.size(), new Comparator<ChunkFile<T>>() {
+            int initialSize = Math.max(1, cfs.size());
+            this.pq = new PriorityQueue<ChunkFile<T>>(initialSize, new Comparator<ChunkFile<T>>() {
                 @Override
                 public int compare(ChunkFile<T> o1, ChunkFile<T> o2) {
                     return o1.compareTo(o2);

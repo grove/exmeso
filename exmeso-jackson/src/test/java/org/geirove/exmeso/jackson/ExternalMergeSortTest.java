@@ -47,14 +47,21 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
     private static final StringPojo E = new StringPojo("E");
 
     @Test
-    public void test() throws IOException {
+    public void testEmpty() throws IOException {
+        assertSorted(
+                Arrays.<StringPojo>asList(), 
+                Arrays.<StringPojo>asList(), false);
+    }
+
+    @Test
+    public void testNonDistinct() throws IOException {
         assertSorted(
                 Arrays.asList(B, D, E, C, A), 
                 Arrays.asList(A, B, C, D, E), false);
     }
 
     @Test
-    public void testWithDuplicates() throws IOException {
+    public void testNonDistinctWithDuplicates() throws IOException {
         assertSorted(
                 Arrays.asList(B, D, C, B, B, E, A, C, A), 
                 Arrays.asList(A, A, B, B, B, C, C, D, E), false);
@@ -127,7 +134,6 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
     @Test
     @Override
     public void testLargeIntegerSort() throws IOException {
-        performPrimeIntegerSort(integerSerializer, integerComparator, false);
         performLargeIntegerSort(integerSerializer, integerComparator, false);
     }
     
