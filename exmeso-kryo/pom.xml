@@ -4,13 +4,13 @@
   <parent>
     <groupId>org.geirove.exmeso</groupId>
     <artifactId>exmeso</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.4-SNAPSHOT</version>
   </parent>
 
   <groupId>org.geirove.exmeso</groupId>
   <artifactId>exmeso-kryo</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.4-SNAPSHOT</version>
 
   <name>Exmeso Kryo - External Merge Sort</name>
   <description>External Merge Sort in Java - Kryo module</description>
@@ -31,12 +31,10 @@
     <dependency>
       <groupId>com.esotericsoftware.kryo</groupId>
       <artifactId>kryo</artifactId>
-      <version>2.22-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

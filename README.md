@@ -80,10 +80,15 @@ The <code>exmeso-jackson</code> module can be added to your own project like thi
     <dependency>
       <groupId>org.geirove.exmeso</groupId>
       <artifactId>exmeso-jackson</artifactId>
-      <version>0.0.3</version>
+      <version>0.0.4</version>
     </dependency>
 
 #### exmeso-kryo
 
-The <code>exmeso-kryo</code> module is not yet released because Kryo version 0.21 contains a bug in its <code>Input.eof()</code> method, so it'll have to wait for the final 0.22 release. Modules released to Maven Central cannot reference SNAPSHOT dependencies. For now you'll have to build the module locally if you would like to try it.
+The <code>exmeso-kryo</code> module can be added to your own project like this:
 
+    <dependency>
+      <groupId>org.geirove.exmeso</groupId>
+      <artifactId>exmeso-kryo</artifactId>
+      <version>0.0.4</version>
+    </dependency>
