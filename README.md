@@ -5,6 +5,8 @@ This is a small library that implements [External Merge Sort](http://en.wikipedi
 
 >"External sorting is a term for a class of sorting algorithms that can handle massive amounts of data. External sorting is required when the data being sorted do not fit into the main memory of a computing device (usually RAM) and instead they must reside in the slower external memory (usually a hard drive). External sorting typically uses a hybrid sort-merge strategy. In the sorting phase, chunks of data small enough to fit in main memory are read, sorted, and written out to a temporary file. In the merge phase, the sorted subfiles are combined into a single larger file. External sorting is a form of distribution sort, with the added characteristic that the individual subsets are separately sorted, rather than just being used internally as intermediate stages." – Wikipedia
 
+### Introduction
+
 It is pretty flexible as it takes either an InputStream or an Iterable&lt;T&gt; as input and returns the sorted result as MergeIterator&lt;T&gt;. 
 
 Sort order is given by an instance of Comparator&lt;T&gt;.
