@@ -7,7 +7,7 @@ This is a small library that implements [External Merge Sort](http://en.wikipedi
 
 ### Introduction
 
-It is pretty flexible as it takes either an InputStream or an Iterable&lt;T&gt; as input and returns the sorted result as MergeIterator&lt;T&gt;. 
+The library is pretty flexible as it takes either an InputStream or an Iterable&lt;T&gt; as input and returns the sorted result as MergeIterator&lt;T&gt;. 
 
 Sort order is given by an instance of Comparator&lt;T&gt;.
 
