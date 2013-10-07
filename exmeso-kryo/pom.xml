@@ -4,13 +4,13 @@
   <parent>
     <groupId>org.geirove.exmeso</groupId>
     <artifactId>exmeso</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6-SNAPSHOT</version>
   </parent>
 
   <groupId>org.geirove.exmeso</groupId>
   <artifactId>exmeso-kryo</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.5</version>
+  <version>0.0.6-SNAPSHOT</version>
 
   <name>Exmeso Kryo - External Merge Sort</name>
   <description>External Merge Sort in Java - Kryo module</description>
