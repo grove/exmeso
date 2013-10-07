@@ -155,26 +155,48 @@ public class ExternalMergeSort<T> {
      * @throws IOException if something fails when doing I/O.
      */
     public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
-        List<File> sortedChunks = writeSortedChunks(values);
-        return mergeSortedChunks(sortedChunks);
-    }
-
-    /**
-     * Performs an external merge on the input stream. Note that the input stream will be closed 
-     * explicitly after all sorted chunks have been written. If that does not work for you, then 
-     * use the writeSortedChunks(InputStream) and mergeSortedChunks(List<File>) methods instead.
-     * @param input InputStream containing the data to sort.
-     * @return an iterator the iterates over the sorted result.
-     * @throws IOException if something fails when doing I/O.
-     */
-    public MergeIterator<T> mergeSort(InputStream input) throws IOException {
-        List<File> sortedChunks;
-        try {
-            sortedChunks = writeSortedChunks(input);
-        } finally {
-            input.close();
+        ChunkSizeIterator<T> csi = new ChunkSizeIterator<T>(values, config.chunkSize);
+        if (csi.isMultipleChunks()) {
+            List<File> sortedChunks = writeSortedChunks(csi);
+            return mergeSortedChunks(sortedChunks);
+        } else {
+            List<T> list = new ArrayList<T>(csi.getHeadSize());
+            while (csi.hasNext()) {
+                list.add(csi.next());
+            }
+            Collections.sort(list, comparator);
+            return new CollectionMergeIterator<T>(list.iterator());
         }
-        return mergeSortedChunks(sortedChunks);
+    }
+    
+    private static class CollectionMergeIterator<T> implements MergeIterator<T> {
+
+        private final Iterator<T> nested;
+
+        private CollectionMergeIterator(Iterator<T> nested) {
+            this.nested = nested;
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return nested.hasNext();
+        }
+
+        @Override
+        public T next() {
+            return nested.next();
+        }
+
+        @Override
+        public void remove() {
+            nested.remove();
+        }
+
+        @Override
+        public void close() throws IOException {
+            // nothing to do here
+        }
+        
     }
     
     /**
@@ -413,32 +435,6 @@ public class ExternalMergeSort<T> {
         File result = File.createTempFile(prefix, "", config.tempDirectory);
         if (debug) {
             System.out.println("F: " + result);
-        }
-        return result;
-    }
-
-    /**
-     * Reads the data from the input stream and writes sorted chunk files to disk. Note that 
-     * the InputStream is *not* being closed explicitly.
-     * @param input InputStream containing the data to sort.
-     * @return list of sorted chunk files. 
-     * @throws IOException if something fails when doing I/O.
-     */
-    public List<File> writeSortedChunks(InputStream input) throws IOException {
-        List<File> result = new ArrayList<File>();
-        Iterator<T> iter = serializer.readValues(input);
-        List<T> chunk = new ArrayList<T>(Math.max(2, config.chunkSize/4));
-        while (iter.hasNext()) {
-            chunk.add(iter.next());
-            if (chunk.size() > config.chunkSize) {
-                File chunkFile = writeSortedChunk(chunk);
-                result.add(chunkFile);
-                chunk = new ArrayList<T>(Math.max(2, config.chunkSize/4));
-            }
-        }
-        if (!chunk.isEmpty()) {
-            File chunkFile = writeSortedChunk(chunk);
-            result.add(chunkFile);
         }
         return result;
     }

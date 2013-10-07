@@ -54,6 +54,20 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
     }
 
     @Test
+    public void testSmallBelowChunkSize() throws IOException {
+        assertSorted(
+                Arrays.asList(B, A), 
+                Arrays.asList(A, B), false);
+    }
+
+    @Test
+    public void testSmallEqualsChunkSize() throws IOException {
+        assertSorted(
+                Arrays.asList(B, C, A), 
+                Arrays.asList(A, B, C), false);
+    }
+
+    @Test
     public void testNonDistinct() throws IOException {
         assertSorted(
                 Arrays.asList(B, D, E, C, A), 

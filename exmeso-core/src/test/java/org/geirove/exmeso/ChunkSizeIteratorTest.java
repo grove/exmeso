@@ -38,11 +38,11 @@ public class ChunkSizeIteratorTest {
     }
     
     private <T> void assertMulti(ChunkSizeIterator<T> csi) {
-        assertTrue("Not multi-chunk", csi.isMultiChunk());
+        assertTrue("Not multi-chunk", csi.isMultipleChunks());
     }
     
     private <T> void assertNotMulti(ChunkSizeIterator<T> csi) {
-        assertTrue("Multi-chunk", !csi.isMultiChunk());
+        assertTrue("Multi-chunk", !csi.isMultipleChunks());
     }
     
     private <T> void assertEqualIterator(ChunkSizeIterator<T> i1, T... values) {

@@ -9,6 +9,7 @@ public class ChunkSizeIterator<T> implements Iterator<T> {
 
     private Iterator<T> head;
     private Iterator<T> tail;
+    private int headSize;
     private boolean multi;
     private boolean hasNext;
     
@@ -17,14 +18,19 @@ public class ChunkSizeIterator<T> implements Iterator<T> {
         for (int i=0; i < chunkSize && nested.hasNext(); i++) {
             chunk.add(nested.next());
         }
-        this.multi = (chunk.size() == chunkSize && nested.hasNext());
+        this.headSize = chunk.size();
+        this.multi = (headSize == chunkSize && nested.hasNext());
         this.head = chunk.iterator();
         this.tail = nested;
         this.hasNext = head.hasNext(); 
     }
 
-    public boolean isMultiChunk() {
+    public boolean isMultipleChunks() {
         return multi;
+    }
+
+    public int getHeadSize() {
+        return headSize;
     }
     
     @Override
