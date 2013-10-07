@@ -107,7 +107,7 @@ Sometimes, when you don't know the size of your input data, it may not always be
         // do in-memory sort
     }
     
-Note that the <code>ExternalMergeSort<T>.mergeSort(Iterator<T>)</code> method will do this for you, so no need to do this if you use that method.
+Note that the <code>ExternalMergeSort<T>.mergeSort(Iterator<T>)</code> method already has this optimization, so no need to do this if you use that method.
     
 ### Maven dependencies
 
