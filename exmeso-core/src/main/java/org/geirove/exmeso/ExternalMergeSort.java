@@ -358,11 +358,12 @@ public class ExternalMergeSort<T> {
             for (ChunkFile<T> cf : cfs) {
                 try {
                     cf.close();
+                } catch (IOException e) {
+                    ex = e; 
+                } finally {
                     if (cleanup) {
                         cf.delete();
                     }
-                } catch (IOException e) {
-                    ex = e; 
                 }
             }
             if (ex != null) {
