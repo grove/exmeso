@@ -55,8 +55,4 @@ public class JacksonSerializer<T> implements ExternalMergeSort.Serializer<T> {
         return jsonParser.readValuesAs(type);
     }
 
-    @Override
-    public void close() throws IOException {
-    }
-
 }

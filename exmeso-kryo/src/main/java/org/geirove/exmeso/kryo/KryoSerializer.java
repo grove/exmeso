@@ -44,10 +44,6 @@ public class KryoSerializer<T> implements ExternalMergeSort.Serializer<T> {
         return new KryoIterator<T>(kryo, type, input);
     }
 
-    @Override
-    public void close() throws IOException {
-    }
-
     private static class KryoIterator<T> implements Iterator<T> {
 
         private final Kryo kryo;

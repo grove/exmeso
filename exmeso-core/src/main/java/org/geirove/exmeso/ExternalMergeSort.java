@@ -140,7 +140,7 @@ public class ExternalMergeSort<T> {
      *
      * @param <T> The type of objects to be sorted.
      */
-    public static interface Serializer<T> extends Closeable {
+    public static interface Serializer<T> {
 
         void writeValues(Iterator<T> values, OutputStream out) throws IOException;
 
