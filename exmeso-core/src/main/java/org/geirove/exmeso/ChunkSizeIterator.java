@@ -5,6 +5,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+/**
+ * An iterator that checks to see if its nested iterator contains more or less 
+ * than a given number of elements. Iterating over the iterator will return 
+ * all elements of the nested iterator.
+ * 
+ * @author geir.gronmo
+ *
+ * @param <T>
+ */
 public class ChunkSizeIterator<T> implements Iterator<T> {
 
     private Iterator<T> head;
@@ -25,10 +34,16 @@ public class ChunkSizeIterator<T> implements Iterator<T> {
         this.hasNext = head.hasNext(); 
     }
 
+    /**
+     * Returns true if the iterator contains more than <code>chunkSize</code> elements.
+     */
     public boolean isMultipleChunks() {
         return multi;
     }
 
+    /**
+     * Returns the number of elements of the head, i.e. <code>chunkSize</code> or less elements
+     */
     public int getHeadSize() {
         return headSize;
     }
