@@ -1,6 +1,5 @@
 package org.geirove.exmeso;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,8 +11,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
 
 /**
  * An implementation of External Merge Sort. This class has a fluent API for building an 
@@ -29,11 +26,11 @@ public class ExternalMergeSort<T> {
     public static boolean debug = false;
     public static boolean debugMerge = false;
     
-    private final Config<T> config;
+    private final Builder<T> config;
     private final Serializer<T> serializer;
     private final Comparator<T> comparator;
 
-    private ExternalMergeSort(Config<T> config) {
+    private ExternalMergeSort(Builder<T> config) {
         this.config = config;
         this.serializer = config.serializer;
         this.comparator = config.comparator;
@@ -44,11 +41,11 @@ public class ExternalMergeSort<T> {
      * @param serializer Serializer<T> to use when sorting.
      * @return Config instance that can be used to set options and in the end create a new instance.
      */
-    public static <T> Config<T> newSorter(Serializer<T> serializer, Comparator<T> comparator) {
-        return new Config<T>(serializer, comparator);
+    public static <T> Builder<T> newSorter(Serializer<T> serializer, Comparator<T> comparator) {
+        return new Builder<T>(serializer, comparator);
     }
 
-    public static class Config<T> {
+    public static class Builder<T> {
         
         private final Serializer<T> serializer;
         private final Comparator<T> comparator;
@@ -59,7 +56,7 @@ public class ExternalMergeSort<T> {
         private boolean cleanup = true;
         private boolean distinct = true;
         
-        private Config(Serializer<T> serializer, Comparator<T> comparator) {
+        private Builder(Serializer<T> serializer, Comparator<T> comparator) {
             this.serializer = serializer;
             this.comparator = comparator;
         }
@@ -70,7 +67,7 @@ public class ExternalMergeSort<T> {
          * @param tempDirectory The temporary directory.
          * @return this
          */
-        public Config<T> withTempDirectory(File tempDirectory) {
+        public Builder<T> withTempDirectory(File tempDirectory) {
             this.tempDirectory = tempDirectory;
             return this;
         }
@@ -81,7 +78,7 @@ public class ExternalMergeSort<T> {
          * @param maxOpenFiles The maximum number of open files.
          * @return this
          */
-        public Config<T> withMaxOpenFiles(int maxOpenFiles) {
+        public Builder<T> withMaxOpenFiles(int maxOpenFiles) {
             this.maxOpenFiles = maxOpenFiles;
             return this;
         }
@@ -93,7 +90,7 @@ public class ExternalMergeSort<T> {
          * default is 1000.
          * @return this
          */
-        public Config<T> withChunkSize(int chunkSize) {
+        public Builder<T> withChunkSize(int chunkSize) {
             this.chunkSize = chunkSize;
             return this;
         }
@@ -103,7 +100,7 @@ public class ExternalMergeSort<T> {
          * @param distinct If true then remove duplicate values.
          * @return this
          */
-        public Config<T> withDistinct(boolean distinct) {
+        public Builder<T> withDistinct(boolean distinct) {
             this.distinct = distinct;
             return this;
         }
@@ -114,7 +111,7 @@ public class ExternalMergeSort<T> {
          * @param cleanup If true then remove temporary files
          * @return this
          */
-        public Config<T> withCleanup(boolean cleanup) {
+        public Builder<T> withCleanup(boolean cleanup) {
             this.cleanup = cleanup;
             return this;
         }
@@ -165,15 +162,15 @@ public class ExternalMergeSort<T> {
                 list.add(csi.next());
             }
             Collections.sort(list, comparator);
-            return new CollectionMergeIterator<T>(list.iterator());
+            return new DelegatingMergeIterator<T>(list.iterator());
         }
     }
     
-    private static class CollectionMergeIterator<T> implements MergeIterator<T> {
+    private static class DelegatingMergeIterator<T> implements MergeIterator<T> {
 
         private final Iterator<T> nested;
 
-        private CollectionMergeIterator(Iterator<T> nested) {
+        private DelegatingMergeIterator(Iterator<T> nested) {
             this.nested = nested;
         }
         
@@ -216,9 +213,13 @@ public class ExternalMergeSort<T> {
         }
         if (sortedChunks.size() == 1) {
             File sortedChunk = sortedChunks.get(0);
-            return new ChunkFile<T>(sortedChunk, serializer, comparator);
+            return new ChunkFile<T>(sortedChunk, serializer, comparator, config.cleanup);
         } else {
-            return new MultiFileMergeIterator<T>(sortedChunks, serializer, comparator, config.cleanup, config.distinct);
+            List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(sortedChunks.size());
+            for  (File file : sortedChunks) {
+                cfs.add(new ChunkFile<T>(file, serializer, comparator, config.cleanup));
+            }
+            return new MultiMergeIterator<T,ChunkFile<T>>(cfs, config.distinct);
         }
     }
 
@@ -276,115 +277,21 @@ public class ExternalMergeSort<T> {
         }
     }
     
-    public static interface MergeIterator<T> extends Iterator<T>, Closeable {
-    }
-    
-    private static class MultiFileMergeIterator<T> implements MergeIterator<T> {
-
-        private final Queue<ChunkFile<T>> pq;
-        private final List<ChunkFile<T>> cfs;
-
-        private final boolean cleanup;
-        private final boolean distinct;
-
-        private T next;
-
-        private MultiFileMergeIterator(List<File> files, Serializer<T> serializer, Comparator<T> comparator, boolean cleanup, boolean distinct) throws IOException {
-            this.cleanup = cleanup;
-            this.distinct = distinct;
-            List<ChunkFile<T>> cfs = new ArrayList<ChunkFile<T>>(files.size());
-            for  (File file : files) {
-                cfs.add(new ChunkFile<T>(file, serializer, comparator));
-            }
-            this.cfs = cfs;
-            int initialSize = Math.max(1, cfs.size());
-            this.pq = new PriorityQueue<ChunkFile<T>>(initialSize, new Comparator<ChunkFile<T>>() {
-                @Override
-                public int compare(ChunkFile<T> o1, ChunkFile<T> o2) {
-                    return o1.compareTo(o2);
-                }
-            });
-            pq.addAll(cfs);
-            readNext();
-        }
-
-        private void readNext() {
-            T next_;
-            if (pq.isEmpty()) {
-                next_ = null;
-            } else {
-                if (distinct) {
-                    do {
-                        ChunkFile<T> cf = pq.poll();
-                        next_ = cf.next();
-                        if (cf.hasNext()) {
-                            pq.add(cf);
-                        }
-                        if (!next_.equals(next)) {
-                            break;
-                        }
-                    } while (true);
-                } else {
-                    ChunkFile<T> cf = pq.poll();
-                    next_ = cf.next();
-                    if (cf.hasNext()) {
-                        pq.add(cf);
-                    }
-                }
-            }
-            this.next = next_;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return next != null;
-        }
-
-        @Override
-        public T next() {
-            T result = next;
-            readNext();
-            return result;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void close() throws IOException {
-            IOException ex = null;
-            for (ChunkFile<T> cf : cfs) {
-                try {
-                    cf.close();
-                } catch (IOException e) {
-                    ex = e; 
-                } finally {
-                    if (cleanup) {
-                        cf.delete();
-                    }
-                }
-            }
-            if (ex != null) {
-                throw ex;
-            }
-        }
-
-    }
-
     private static class ChunkFile<T> implements Comparable<ChunkFile<T>>, MergeIterator<T> {
 
         private final File file;
         private final Comparator<T> comparator;
+        private final boolean cleanup;
 
         private final InputStream input;
-        private Iterator<T> iter;
+        private final Iterator<T> iter;
+
         private T next;
 
-        private ChunkFile(final File file, Serializer<T> serializer, Comparator<T> comparator) throws IOException {
+        private ChunkFile(final File file, Serializer<T> serializer, Comparator<T> comparator, boolean cleanup) throws IOException {
             this.file = file;
             this.comparator = comparator;
+            this.cleanup = cleanup;
             input = new FileInputStream(file);
             iter = serializer.readValues(input);
             readNext();
@@ -423,11 +330,13 @@ public class ExternalMergeSort<T> {
 
         @Override
         public void close() throws IOException {
-            input.close();
-        }
-
-        public void delete() {
-            file.delete();
+            try {
+                input.close();
+            } finally {
+                if (cleanup) {
+                    file.delete();
+                }
+            }
         }
 
     }

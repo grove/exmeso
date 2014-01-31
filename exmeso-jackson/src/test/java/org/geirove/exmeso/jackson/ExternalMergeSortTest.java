@@ -12,7 +12,7 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.geirove.exmeso.AbstractExternalMergeSortTest;
 import org.geirove.exmeso.ExternalMergeSort;
-import org.geirove.exmeso.ExternalMergeSort.MergeIterator;
+import org.geirove.exmeso.MergeIterator;
 import org.junit.Test;
 
 public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {

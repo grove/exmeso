@@ -118,7 +118,7 @@ The <code>exmeso-jackson</code> module can be added to your own project like thi
     <dependency>
       <groupId>org.geirove.exmeso</groupId>
       <artifactId>exmeso-jackson</artifactId>
-      <version>0.0.5</version>
+      <version>0.0.6</version>
     </dependency>
 
 #### exmeso-kryo
@@ -128,5 +128,5 @@ The <code>exmeso-kryo</code> module can be added to your own project like this:
     <dependency>
       <groupId>org.geirove.exmeso</groupId>
       <artifactId>exmeso-kryo</artifactId>
-      <version>0.0.5</version>
+      <version>0.0.6</version>
     </dependency>

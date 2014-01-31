@@ -8,7 +8,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.geirove.exmeso.ExternalMergeSort.MergeIterator;
 import org.geirove.exmeso.ExternalMergeSort.Serializer;
 
 public abstract class AbstractExternalMergeSortTest {
