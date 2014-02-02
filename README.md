@@ -7,7 +7,7 @@ This is a small library that implements [External Merge Sort](http://en.wikipedi
 
 ### Introduction
 
-The library is pretty flexible as it takes an Iterable&lt;T&gt; as input and returns the sorted result as MergeIterator&lt;T&gt;. 
+The library is pretty flexible as it takes an Iterable&lt;T&gt; as input and returns the sorted result as CloseableIterator&lt;T&gt;. 
 
 Sort order is given by an instance of Comparator&lt;T&gt;.
 
@@ -71,8 +71,8 @@ Example code:
     
     // Get a merge iterator over the sorted chunks. This will return the
     // objects in sorted order. Note that the sorted chunks will be deleted 
-    // when the MergeIterator is closed if 'cleanup' is set to true.
-    MergeIterator<ObjectNode> sorted = sort.mergeSortedChunks(sortedChunks);
+    // when the CloseableIterator is closed if 'cleanup' is set to true.
+    CloseableIterator<ObjectNode> sorted = sort.mergeSortedChunks(sortedChunks);
     try {
         OutputStream output = new FileOutputStream(outputFile);
         try {
@@ -89,9 +89,9 @@ The above example is a little involved as it needs to, in addition to doing the 
 The [ExternalMergeSort&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-core/src/main/java/org/geirove/exmeso/ExternalMergeSort.java) class has the following public instance methods:
 
     List<File> writeSortedChunks(Iterator<T>)
-    MergeIterator<T> mergeSortedChunks(List<File>)
+    CloseableIterator<T> mergeSortedChunks(List<File>)
     
-    MergeIterator<T> mergeSort(Iterator<T>)
+    CloseableIterator<T> mergeSort(Iterator<T>)
 
 The example used the first two methods, but the third one can also be used instead.
 

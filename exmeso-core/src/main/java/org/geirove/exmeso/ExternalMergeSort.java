@@ -151,7 +151,7 @@ public class ExternalMergeSort<T> {
      * @return an iterator the iterates over the sorted result.
      * @throws IOException if something fails when doing I/O.
      */
-    public MergeIterator<T> mergeSort(Iterator<T> values) throws IOException {
+    public CloseableIterator<T> mergeSort(Iterator<T> values) throws IOException {
         ChunkSizeIterator<T> csi = new ChunkSizeIterator<T>(values, config.chunkSize);
         if (csi.isMultipleChunks()) {
             List<File> sortedChunks = writeSortedChunks(csi);
@@ -166,7 +166,7 @@ public class ExternalMergeSort<T> {
         }
     }
     
-    private static class DelegatingMergeIterator<T> implements MergeIterator<T> {
+    private static class DelegatingMergeIterator<T> implements CloseableIterator<T> {
 
         private final Iterator<T> nested;
 
@@ -203,11 +203,11 @@ public class ExternalMergeSort<T> {
      * @return an iterator the iterates over the sorted result.
      * @throws IOException if something fails when doing I/O.
      */
-    public MergeIterator<T> mergeSortedChunks(List<File> sortedChunks) throws IOException {
+    public CloseableIterator<T> mergeSortedChunks(List<File> sortedChunks) throws IOException {
         return mergeSortedChunksNoPartialMerge(partialMerge(sortedChunks));
     }
     
-    private MergeIterator<T> mergeSortedChunksNoPartialMerge(List<File> sortedChunks) throws IOException {
+    private CloseableIterator<T> mergeSortedChunksNoPartialMerge(List<File> sortedChunks) throws IOException {
         if (debugMerge) {
             System.out.println("Merging chunks: " + sortedChunks.size());
         }
@@ -219,7 +219,7 @@ public class ExternalMergeSort<T> {
             for  (File file : sortedChunks) {
                 cfs.add(new ChunkFile<T>(file, serializer, comparator, config.cleanup));
             }
-            return new MultiMergeIterator<T,ChunkFile<T>>(cfs, config.distinct);
+            return new MergeSortedIterator<T,ChunkFile<T>>(cfs, config.distinct);
         }
     }
 
@@ -269,7 +269,7 @@ public class ExternalMergeSort<T> {
     }
 
     private File mergeSubList(List<File> subList) throws IOException {
-        MergeIterator<T> iter = mergeSortedChunksNoPartialMerge(subList);
+        CloseableIterator<T> iter = mergeSortedChunksNoPartialMerge(subList);
         try {
             return writeChunk("exmeso-merged-", iter);
         } finally {
@@ -277,7 +277,7 @@ public class ExternalMergeSort<T> {
         }
     }
     
-    private static class ChunkFile<T> implements Comparable<ChunkFile<T>>, MergeIterator<T> {
+    private static class ChunkFile<T> implements Comparable<ChunkFile<T>>, CloseableIterator<T> {
 
         private final File file;
         private final Comparator<T> comparator;

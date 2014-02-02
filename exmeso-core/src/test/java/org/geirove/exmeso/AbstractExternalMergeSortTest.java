@@ -78,7 +78,7 @@ public abstract class AbstractExternalMergeSortTest {
     private void assertSorted(Serializer<Integer> serializer, Comparator<Integer> comparator, ExternalMergeSort<Integer> sort, Iterator<Integer> input, int size, boolean distinct) throws IOException {
         long st = System.currentTimeMillis();
         int last = Integer.MIN_VALUE;
-        MergeIterator<Integer> iter = sort.mergeSort(input);
+        CloseableIterator<Integer> iter = sort.mergeSort(input);
         if (ExternalMergeSort.debug) {
             System.out.println("A: " + (System.currentTimeMillis() - st) + "ms");
         }

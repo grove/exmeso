@@ -6,28 +6,28 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-public class MultiMergeIterator<T,C extends MergeIterator<T>> implements MergeIterator<T> {
+public class MergeSortedIterator<T,I extends CloseableIterator<T>> implements CloseableIterator<T> {
 
-    private final Queue<C> pq;
-    private final Collection<C> cfs;
+    private final Queue<I> pq;
+    private final Collection<I> iters;
 
     private final boolean distinct;
 
     private T next;
 
-    public MultiMergeIterator(Collection<C> cfs, boolean distinct) throws IOException {
+    public MergeSortedIterator(Collection<I> iters, boolean distinct) throws IOException {
         this.distinct = distinct;
-        this.cfs = cfs;
-        this.pq = new PriorityQueue<C>(cfs);
+        this.iters = iters;
+        this.pq = new PriorityQueue<I>(iters); // NOTE: C must implement Comparable<C>
         readNext();
     }
 
-    public MultiMergeIterator(Collection<C> cfs, Comparator<C> comparator, boolean distinct) throws IOException {
+    public MergeSortedIterator(Collection<I> iters, Comparator<I> comparator, boolean distinct) throws IOException {
         this.distinct = distinct;
-        this.cfs = cfs;
-        int initialSize = Math.max(1, cfs.size());
-        this.pq = new PriorityQueue<C>(initialSize, comparator);
-        pq.addAll(cfs);
+        this.iters = iters;
+        int initialSize = Math.max(1, iters.size());
+        this.pq = new PriorityQueue<I>(initialSize, comparator);
+        pq.addAll(iters);
         readNext();
     }
 
@@ -38,20 +38,20 @@ public class MultiMergeIterator<T,C extends MergeIterator<T>> implements MergeIt
         } else {
             if (distinct) {
                 do {
-                    C cf = pq.poll();
-                    next_ = cf.next();
-                    if (cf.hasNext()) {
-                        pq.add(cf);
+                    I iter = pq.poll();
+                    next_ = iter.next();
+                    if (iter.hasNext()) {
+                        pq.add(iter);
                     }
                     if (!next_.equals(next)) {
                         break;
                     }
                 } while (true);
             } else {
-                C cf = pq.poll();
-                next_ = cf.next();
-                if (cf.hasNext()) {
-                    pq.add(cf);
+                I iter = pq.poll();
+                next_ = iter.next();
+                if (iter.hasNext()) {
+                    pq.add(iter);
                 }
             }
         }
@@ -78,9 +78,9 @@ public class MultiMergeIterator<T,C extends MergeIterator<T>> implements MergeIt
     @Override
     public void close() throws IOException {
         IOException ex = null;
-        for (C cf : cfs) {
+        for (I iter : iters) {
             try {
-                cf.close();
+                iter.close();
             } catch (IOException e) {
                 ex = e; 
             }

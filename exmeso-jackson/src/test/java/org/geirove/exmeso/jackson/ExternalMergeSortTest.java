@@ -12,7 +12,7 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.geirove.exmeso.AbstractExternalMergeSortTest;
 import org.geirove.exmeso.ExternalMergeSort;
-import org.geirove.exmeso.MergeIterator;
+import org.geirove.exmeso.CloseableIterator;
 import org.junit.Test;
 
 public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
@@ -105,7 +105,7 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
     private void assertSorted(List<StringPojo> input, List<StringPojo> expected, boolean distinct) throws IOException {
         ExternalMergeSort<StringPojo> sort = createMergeSort(distinct);
 
-        MergeIterator<StringPojo> result = sort.mergeSort(input.iterator());
+        CloseableIterator<StringPojo> result = sort.mergeSort(input.iterator());
 
         Iterator<StringPojo> iter = expected.iterator();
         try {
