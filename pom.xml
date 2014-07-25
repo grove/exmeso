@@ -46,7 +46,12 @@
       <dependency>
         <groupId>com.esotericsoftware.kryo</groupId>
         <artifactId>kryo</artifactId>
-        <version>2.23.0</version>
+        <version>2.24.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.msgpack</groupId>
+        <artifactId>msgpack</artifactId>
+        <version>0.6.11</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -99,6 +104,7 @@
     <module>exmeso-core</module>
     <module>exmeso-jackson</module>
     <module>exmeso-kryo</module>
+    <module>exmeso-msgpack</module>
   </modules>
   
 </project>

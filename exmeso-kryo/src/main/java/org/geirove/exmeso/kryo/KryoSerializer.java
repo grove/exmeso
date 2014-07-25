@@ -22,7 +22,7 @@ public class KryoSerializer<T> implements ExternalMergeSort.Serializer<T> {
 
     public KryoSerializer(Class<T> type, Kryo kryo) {
         this.type = type;
-        this.kryo = new Kryo();    
+        this.kryo = kryo;    
     }
 
     @Override
