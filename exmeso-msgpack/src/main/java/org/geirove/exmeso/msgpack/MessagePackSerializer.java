@@ -54,7 +54,6 @@ public class MessagePackSerializer<T> implements ExternalMergeSort.Serializer<T>
         @Override
         public boolean hasNext() {
             try {
-                unpacker.iterator();
                 this.next = unpacker.read(type);
             } catch (EOFException ex) {
                 this.next = null;
