@@ -15,6 +15,7 @@ Persistence is handled by an implementation of the Serializer&lt;T&gt; interface
 
 * [JacksonSerializer&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-jackson/src/main/java/org/geirove/exmeso/jackson/JacksonSerializer.java) - serialization and deserialization using the [Jackson](http://jackson.codehaus.org/) library.
 * [KryoSerializer&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-kryo/src/main/java/org/geirove/exmeso/kryo/KryoSerializer.java) - serialization and deserialization using the [Kryo](https://code.google.com/p/kryo/) library.
+* [MessagePackSerializer&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-msgpack/src/main/java/org/geirove/exmeso/msgpack/MessagePackSerializer.java) - serialization and deserialization using the [MessagePack](http://msgpack.org/) library.
 
 The sorting algorithm is implemented by [ExternalMergeSort&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-core/src/main/java/org/geirove/exmeso/ExternalMergeSort.java).
 
@@ -128,5 +129,15 @@ The <code>exmeso-kryo</code> module can be added to your own project like this:
     <dependency>
       <groupId>org.geirove.exmeso</groupId>
       <artifactId>exmeso-kryo</artifactId>
+      <version>0.0.6</version>
+    </dependency>
+
+#### exmeso-msgpack
+
+The <code>exmeso-msgpack</code> module can be added to your own project like this:
+
+    <dependency>
+      <groupId>org.geirove.exmeso</groupId>
+      <artifactId>exmeso-msgpack</artifactId>
       <version>0.0.6</version>
     </dependency>
