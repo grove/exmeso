@@ -98,12 +98,12 @@ The example used the first two methods, but the third one can also be used inste
 
 ### Helpers
 
-Sometimes, when you don't know the size of your input data, it may not always be neccessary to do an external sort as everything can fit into available memory and be sorted there. This is the case when the size is less than or equal to the <code>chunkSize</code>. For this scenario the [ChunkSizeIterator&lt;T&gt;]() helper class comes in handy. Wrap your own <code>Iterator&lt;T&gt;</code> so that it can figure out if an external merge sort is neccessary:
+Sometimes, when you don't know the size of your input data, it may not always be neccessary to do an external sort as everything can fit into available memory and be sorted there. This is the case when the size is less than or equal to the <code>chunkSize</code>. For this scenario the [ChunkSizeIterator&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-core/src/main/java/org/geirove/exmeso/ChunkSizeIterator.java) helper class comes in handy. Wrap your own <code>Iterator&lt;T&gt;</code> so that it can figure out if an external merge sort is neccessary:
 
     Iterator<String> yourIterator = …;
     ChunkSizeIterator csi = new ChunkSizeIterator(yourIterator, chunkSize);
     if (csi.isMultipleChunks()) {
-        // do external sort
+        // do external sort        
     } else {
         // do in-memory sort
     }
