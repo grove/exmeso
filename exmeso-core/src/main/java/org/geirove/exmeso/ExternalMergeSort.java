@@ -163,16 +163,21 @@ public class ExternalMergeSort<T> {
                 list.add(csi.next());
             }
             Collections.sort(list, comparator);
-            return new DelegatingMergeIterator<T>(list.iterator());
+            return new DelegatingMergeIterator<T>(list.iterator(), comparator, config.distinct);
         }
     }
     
     private static class DelegatingMergeIterator<T> implements CloseableIterator<T> {
 
         private final Iterator<T> nested;
+        private final boolean distinct;
+        private T prev;
+        private Comparator<T> comparator;
 
-        private DelegatingMergeIterator(Iterator<T> nested) {
+        private DelegatingMergeIterator(Iterator<T> nested, Comparator<T> comparator, boolean distinct) {
             this.nested = nested;
+            this.comparator = comparator;
+            this.distinct = distinct;
         }
         
         @Override
@@ -182,7 +187,16 @@ public class ExternalMergeSort<T> {
 
         @Override
         public T next() {
-            return nested.next();
+            if (distinct) {
+                T next;
+                do {
+                    next = nested.next();
+                } while (prev != null && comparator.compare(prev, next) == 0 && nested.hasNext());
+                prev = next;
+                return next;
+            } else {
+                return nested.next();
+            }
         }
 
         @Override
