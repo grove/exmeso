@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * An implementation of External Merge Sort. This class has a fluent API for building an 
@@ -158,60 +160,39 @@ public class ExternalMergeSort<T> {
             List<File> sortedChunks = writeSortedChunks(csi);
             return mergeSortedChunks(sortedChunks);
         } else {
-            List<T> list = new ArrayList<T>(csi.getHeadSize());
-            while (csi.hasNext()) {
-                list.add(csi.next());
+            if (config.distinct) {
+                SortedSet<T> list = new TreeSet<T>(comparator);
+                while (csi.hasNext()) {
+                    list.add(csi.next());
+                }
+                return new DelegatingMergeIterator<T>(list.iterator());
+            } else {
+                List<T> list = new ArrayList<T>(csi.getHeadSize());
+                while (csi.hasNext()) {
+                    list.add(csi.next());
+                }
+                Collections.sort(list, comparator);
+                return new DelegatingMergeIterator<T>(list.iterator());
             }
-            Collections.sort(list, comparator);
-            return new DelegatingMergeIterator<T>(list.iterator(), comparator, config.distinct);
         }
     }
     
     private static class DelegatingMergeIterator<T> implements CloseableIterator<T> {
 
         private final Iterator<T> nested;
-        private final boolean distinct;
-        private T next;
-        private Comparator<T> comparator;
 
-        private DelegatingMergeIterator(Iterator<T> nested, Comparator<T> comparator, boolean distinct) {
+        private DelegatingMergeIterator(Iterator<T> nested) {
             this.nested = nested;
-            this.comparator = comparator;
-            this.distinct = distinct;
-            readNext();
         }
         
         @Override
         public boolean hasNext() {
-            return next != null;
+            return nested.hasNext();
         }
 
         @Override
         public T next() {
-            T result = next;
-            readNext();
-            return result;
-        }
-
-        private void readNext() {
-            if (distinct) {
-                T x;
-                do {
-                    if (nested.hasNext()) {
-                        x = nested.next();
-                    } else {
-                        x = null;
-                        break;
-                    }
-                } while (comparator.compare(x, next) == 0);
-                this.next = x;
-            } else {
-                if (nested.hasNext()) {
-                    next = nested.next();
-                } else {
-                    next = null;
-                }
-            }
+            return nested.next();
         }
 
         @Override
