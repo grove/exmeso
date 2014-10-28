@@ -90,20 +90,47 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
 
     @Test
     public void testDistinct() throws IOException {
+        int chunkSize = 2;
+        int maxOpenFiles = 2;
         assertSorted(
                 Arrays.asList(B, D, E, C, A), 
-                Arrays.asList(A, B, C, D, E), true);
+                Arrays.asList(A, B, C, D, E), true, chunkSize, maxOpenFiles);
+    }
+
+    @Test
+    public void testDistinctSingleChunk() throws IOException {
+        int chunkSize = 1000;
+        int maxOpenFiles = 2;
+        assertSorted(
+                Arrays.asList(B, D, E, C, A), 
+                Arrays.asList(A, B, C, D, E), true, chunkSize, maxOpenFiles);
     }
 
     @Test
     public void testDistinctWithDuplicates() throws IOException {
+        int chunkSize = 2;
+        int maxOpenFiles = 2;
         assertSorted(
                 Arrays.asList(B, D, C, B, B, E, A, C, A), 
-                Arrays.asList(A, B, C, D, E), true);
+                Arrays.asList(A, B, C, D, E), true, chunkSize, maxOpenFiles);
+    }
+
+    @Test
+    public void testDistinctWithDuplicatesSingleChunk() throws IOException {
+        int chunkSize = 1000;
+        int maxOpenFiles = 2;
+        assertSorted(
+                Arrays.asList(B, D, C, B, B, E, A, C, A), 
+                Arrays.asList(A, B, C, D, E), true, chunkSize, maxOpenFiles);
     }
 
     private void assertSorted(List<StringPojo> input, List<StringPojo> expected, boolean distinct) throws IOException {
-        ExternalMergeSort<StringPojo> sort = createMergeSort(distinct);
+        assertSorted(input, expected, distinct, 3, 2);
+    }
+    
+    private void assertSorted(List<StringPojo> input, List<StringPojo> expected, boolean distinct,
+            int chunkSize, int maxOpenFiles) throws IOException {
+        ExternalMergeSort<StringPojo> sort = createMergeSort(distinct, chunkSize, maxOpenFiles);
 
         CloseableIterator<StringPojo> result = sort.mergeSort(input.iterator());
 
@@ -132,12 +159,12 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
         }
     };
     private static final JacksonSerializer<StringPojo> stringPojoSerializer = new JacksonSerializer<StringPojo>(StringPojo.class);
-
-    protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct) {
+    
+    protected ExternalMergeSort<StringPojo> createMergeSort(boolean distinct, int chunkSize, int maxOpenFiles) {
 
         return ExternalMergeSort.newSorter(stringPojoSerializer, stringPojoComparator)
-                .withChunkSize(3)
-                .withMaxOpenFiles(2)
+                .withChunkSize(chunkSize)
+                .withMaxOpenFiles(maxOpenFiles)
                 .withDistinct(distinct)
                 .withCleanup(!ExternalMergeSort.debug)
                 .build();
