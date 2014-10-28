@@ -32,4 +32,11 @@ public class ExternalMergeSortTest extends AbstractExternalMergeSortTest {
         performMultiMergeIntegerSort(integerSerializer, integerComparator, false);
     }
 
+    public static void main(String[] args) throws IOException {
+        long ts = System.currentTimeMillis();
+        ExternalMergeSortTest et = new ExternalMergeSortTest();
+        et.testLargeIntegerSort();
+        System.out.println("" + (System.currentTimeMillis()-ts));
+    }
+    
 }

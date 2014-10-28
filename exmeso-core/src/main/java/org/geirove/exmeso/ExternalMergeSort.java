@@ -96,7 +96,8 @@ public class ExternalMergeSort<T> {
         }
         
         /**
-         * Specifies whether to remove duplicate values. The default is true.
+         * Specifies whether to remove duplicate values. The default is true. 
+         * Note that Comparator.compare(A,B) == 0 is used to find duplicate items.
          * @param distinct If true then remove duplicate values.
          * @return this
          */
@@ -219,7 +220,7 @@ public class ExternalMergeSort<T> {
             for  (File file : sortedChunks) {
                 cfs.add(new ChunkFile<T>(file, serializer, comparator, config.cleanup));
             }
-            return new MergeSortedIterator<T,ChunkFile<T>>(cfs, config.distinct);
+            return new MergeSortedIterator<T,ChunkFile<T>>(cfs, comparator, config.distinct);
         }
     }
 
@@ -341,16 +342,8 @@ public class ExternalMergeSort<T> {
 
     }
 
-    protected File createChunkFile(String prefix) throws IOException {
-        File result = File.createTempFile(prefix, "", config.tempDirectory);
-        if (debug) {
-            System.out.println("F: " + result);
-        }
-        return result;
-    }
-
     /**
-     * Reads the data from the iterator and writes sorted chunk files to disk.
+     * Read the data from the iterator, then perform a sort, and write individually sorted chunk files to disk.
      * @param input Iterator containing the data to sort.
      * @return list of sorted chunk files. 
      * @throws IOException if something fails when doing I/O.
@@ -358,14 +351,19 @@ public class ExternalMergeSort<T> {
     public List<File> writeSortedChunks(Iterator<T> input) throws IOException {
         List<File> result = new ArrayList<File>();
         while (input.hasNext()) {
-            List<T> chunk = readChunk(input);
-            File chunkFile = writeSortedChunk(chunk);
+            File chunkFile = writeSortedChunk(input);
             result.add(chunkFile);
         }
         if (debugMerge) {
             System.out.printf("Chunks %d (chunkSize=%d, maxOpenFiles=%d)\n", result.size(), config.chunkSize, config.maxOpenFiles);
         }
         return result;
+    }
+
+    private File writeSortedChunk(Iterator<T> input) throws IOException {
+        List<T> chunk = readChunk(input);
+        File chunkFile = writeSortedChunk(chunk);
+        return chunkFile;
     }
 
     private File writeSortedChunk(List<T> values) throws IOException {
@@ -386,6 +384,14 @@ public class ExternalMergeSort<T> {
             out.close();
         }
         return chunkFile;
+    }
+
+    protected File createChunkFile(String prefix) throws IOException {
+        File result = File.createTempFile(prefix, "", config.tempDirectory);
+        if (debug) {
+            System.out.println("F: " + result);
+        }
+        return result;
     }
 
     private List<T> readChunk(Iterator<T> input) {

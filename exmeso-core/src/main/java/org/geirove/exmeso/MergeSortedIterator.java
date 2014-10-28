@@ -13,20 +13,23 @@ public class MergeSortedIterator<T,I extends CloseableIterator<T>> implements Cl
 
     private final boolean distinct;
 
+    private final Comparator<T> tcomparator;
     private T next;
 
-    public MergeSortedIterator(Collection<I> iters, boolean distinct) throws IOException {
+    public MergeSortedIterator(Collection<I> iters, Comparator<T> tcomparator, boolean distinct) throws IOException {
+        this.tcomparator = tcomparator;
         this.distinct = distinct;
         this.iters = iters;
         this.pq = new PriorityQueue<I>(iters); // NOTE: C must implement Comparable<C>
         readNext();
     }
 
-    public MergeSortedIterator(Collection<I> iters, Comparator<I> comparator, boolean distinct) throws IOException {
+    public MergeSortedIterator(Collection<I> iters, Comparator<I> icomparator, Comparator<T> tcomparator, boolean distinct) throws IOException {
+        this.tcomparator = tcomparator;
         this.distinct = distinct;
         this.iters = iters;
         int initialSize = Math.max(1, iters.size());
-        this.pq = new PriorityQueue<I>(initialSize, comparator);
+        this.pq = new PriorityQueue<I>(initialSize, icomparator);
         pq.addAll(iters);
         readNext();
     }
@@ -43,7 +46,7 @@ public class MergeSortedIterator<T,I extends CloseableIterator<T>> implements Cl
                     if (iter.hasNext()) {
                         pq.add(iter);
                     }
-                    if (!next_.equals(next)) {
+                    if (next == null || tcomparator.compare(next_, next) != 0) {
                         break;
                     }
                 } while (true);
