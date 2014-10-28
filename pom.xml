@@ -23,6 +23,21 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+
+  <!--distributionManagement>
+    <repository>
+      <id>agrep01</id>
+      <name>agrep01</name>
+      <url>http://agrep01:8080/artifactory/libs-releases-local</url>
+      <uniqueVersion>false</uniqueVersion>
+    </repository>
+    <snapshotRepository>
+      <id>agrep01-snapshots</id>
+      <name>agrep01-snapshots</name>
+      <url>http://agrep01:8080/artifactory/libs-snapshots-local</url>
+      <uniqueVersion>false</uniqueVersion>
+    </snapshotRepository>
+  </distributionManagement-->
   
   <scm>
     <connection>scm:git:git://github.com/grove/exmeso.git</connection>
