@@ -171,37 +171,52 @@ public class ExternalMergeSort<T> {
 
         private final Iterator<T> nested;
         private final boolean distinct;
-        private T prev;
+        private T next;
         private Comparator<T> comparator;
 
         private DelegatingMergeIterator(Iterator<T> nested, Comparator<T> comparator, boolean distinct) {
             this.nested = nested;
             this.comparator = comparator;
             this.distinct = distinct;
+            readNext();
         }
         
         @Override
         public boolean hasNext() {
-            return nested.hasNext();
+            return next != null;
         }
 
         @Override
         public T next() {
+            T result = next;
+            readNext();
+            return result;
+        }
+
+        private void readNext() {
             if (distinct) {
-                T next;
+                T x;
                 do {
-                    next = nested.next();
-                } while (prev != null && comparator.compare(prev, next) == 0 && nested.hasNext());
-                prev = next;
-                return next;
+                    if (nested.hasNext()) {
+                        x = nested.next();
+                    } else {
+                        x = null;
+                        break;
+                    }
+                } while (comparator.compare(x, next) == 0);
+                this.next = x;
             } else {
-                return nested.next();
+                if (nested.hasNext()) {
+                    next = nested.next();
+                } else {
+                    next = null;
+                }
             }
         }
 
         @Override
         public void remove() {
-            nested.remove();
+            throw new UnsupportedOperationException();
         }
 
         @Override

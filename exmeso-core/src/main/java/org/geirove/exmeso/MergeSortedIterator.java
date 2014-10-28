@@ -49,6 +49,10 @@ public class MergeSortedIterator<T,I extends CloseableIterator<T>> implements Cl
                     if (next == null || tcomparator.compare(next, next_) != 0) {
                         break;
                     }
+                    if (pq.isEmpty()) {
+                        next_ = null;
+                        break;
+                    }
                 } while (true);
             } else {
                 I iter = pq.poll();
