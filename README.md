@@ -90,11 +90,12 @@ The above example is a little involved as it needs to, in addition to doing the 
 The [ExternalMergeSort&lt;T&gt;](https://github.com/grove/exmeso/blob/master/exmeso-core/src/main/java/org/geirove/exmeso/ExternalMergeSort.java) class has the following public instance methods:
 
     List<File> writeSortedChunks(Iterator<T>)
+    File writeSortedChunk(Iterator<T>)
     CloseableIterator<T> mergeSortedChunks(List<File>)
     
     CloseableIterator<T> mergeSort(Iterator<T>)
 
-The example used the first two methods, but the third one can also be used instead.
+The example used the first and the third method, but the fourth one can also be used instead.
 
 ### Helpers
 
@@ -119,7 +120,7 @@ The <code>exmeso-jackson</code> module can be added to your own project like thi
     <dependency>
       <groupId>org.geirove.exmeso</groupId>
       <artifactId>exmeso-jackson</artifactId>
-      <version>0.0.6</version>
+      <version>0.2</version>
     </dependency>
 
 #### exmeso-kryo
@@ -129,7 +130,7 @@ The <code>exmeso-kryo</code> module can be added to your own project like this:
     <dependency>
       <groupId>org.geirove.exmeso</groupId>
       <artifactId>exmeso-kryo</artifactId>
-      <version>0.0.6</version>
+      <version>0.2</version>
     </dependency>
 
 #### exmeso-msgpack
@@ -139,5 +140,5 @@ The <code>exmeso-msgpack</code> module can be added to your own project like thi
     <dependency>
       <groupId>org.geirove.exmeso</groupId>
       <artifactId>exmeso-msgpack</artifactId>
-      <version>0.0.6</version>
+      <version>0.2</version>
     </dependency>
